@@ -206,12 +206,12 @@ class Products extends React.Component {
   }
 
   handleSubmit = () => {
-    const Id = uuidv4()
-    const imageUrls = []
     var Await = true
+    const imageUrls = []
     for (let index = 0; index < this.state.ImageList.length; index++) {
       const element = this.state.ImageList[index].data_url
       console.log(this.state.ImageList[index])
+      console.log(index)
 
       const data = new FormData()
       data.append('file', element)
@@ -228,36 +228,52 @@ class Products extends React.Component {
             Alt: 'image'
           }
           imageUrls.push(imageURL)
+          console.log(index)
+          if (index === this.state.ImageList.length - 1) {
+            console.log(imageURL)
+            this.onSubmitToDb(imageUrls)
+
+            Await = false
+          }
         })
         .catch(err => console.log(err))
-      if (index === this.state.ImageList.length - 1) {
-        Await = false
-      }
     }
+    console.log(Await)
     if (!Await) {
-      const data = {
-        Id: Id,
-        Name: this.state.Name,
-        Price: this.state.Price,
-        CurrenPrice: this.state.CurrentPrice,
-        Code: randomstring.generate(4),
-        CategoryId: this.state.CategoryId,
-        Description: this.state.Description,
-        ImageStorage: imageUrls,
-        Tags: this.state.ProdcutTags,
-        Status: true,
-        Star: 0
-      }
-      console.log(data)
-      axios({
-        method: 'post',
-        url: '/api/product-management',
-        headers: { 'content-type': 'application/json' },
-        data: JSON.stringify(data)
-      }).then(res => {
-        console.log(res)
-      })
+      console.log(imageUrls)
+      this.onSubmitToDb(imageUrls)
+    } else {
     }
+
+    // bar.then({
+
+    // })
+  }
+  onSubmitToDb = imageUrls => {
+    const Id = uuidv4()
+
+    const data = {
+      Id: Id,
+      Name: this.state.Name,
+      Price: this.state.Price,
+      CurrenPrice: this.state.CurrentPrice,
+      Code: randomstring.generate(4),
+      CategoryId: this.state.CategoryId,
+      Description: this.state.Description,
+      ImageStorage: imageUrls,
+      Tags: this.state.ProdcutTags,
+      Status: true,
+      Star: 0
+    }
+
+    axios({
+      method: 'post',
+      url: '/api/product-management',
+      headers: { 'content-type': 'application/json' },
+      data: JSON.stringify(data)
+    }).then(res => {
+      console.log(res)
+    })
   }
   render () {
     const { value } = this.state
@@ -453,7 +469,7 @@ class Products extends React.Component {
             <div style={{ marginLeft: '10px', marginTop: '10px' }}>
               <Header as='h1'>Add product</Header>
               <Segment basic textAlign='center'>
-                <Form onSubmit={this.handleSubmit}>
+                <Form>
                   <Form.Group widths='equal'>
                     <Form.Input
                       fluid
@@ -487,7 +503,7 @@ class Products extends React.Component {
                     />
                     <Form.Select
                       fluid
-                      name='TagId'
+                      name='Tag'
                       label='Tag'
                       options={this.state.Tags}
                       placeholder='Tag'
@@ -602,7 +618,7 @@ class Products extends React.Component {
                       </Segment>
                     )}
                   </ImageUploading>
-                  <Form.Button content='Save' />
+                  <Button onClick={this.handleSubmit} content='Save' />
                 </Form>
               </Segment>
             </div>
