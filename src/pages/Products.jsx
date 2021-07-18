@@ -179,8 +179,8 @@ class Products extends React.Component {
   onAddElement () {
     const element = {
       Quantity: this.state.Quantity,
-      Color: this.state.ColorId,
-      Size: this.state.SizeId
+      ColorId: this.state.ColorId,
+      SizeId: this.state.SizeId
     }
     this.state.Elements.push(element)
     console.log(this.state.Elements)
@@ -262,6 +262,7 @@ class Products extends React.Component {
       Description: this.state.Description,
       ImageStorage: imageUrls,
       Tags: this.state.ProdcutTags,
+      Elements: this.state.Elements,
       Status: true,
       Star: 0
     }
@@ -323,8 +324,8 @@ class Products extends React.Component {
 
     const renderBodyElements = (item, index) => (
       <tr key={index}>
-        <td>{item.Color}</td>
-        <td>{item.Size}</td>
+        <td>{item.ColorId}</td>
+        <td>{item.SizeId}</td>
         <td>{item.Quantity}</td>
         {/* <td>Edit</td> */}
       </tr>
