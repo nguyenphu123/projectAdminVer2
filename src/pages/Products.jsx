@@ -20,6 +20,9 @@ import {
 import { RMIUploader } from 'react-multiple-image-uploader'
 import ImageUploading from 'react-images-uploading'
 import './Product.css'
+import { useFaker } from 'react-fakers'
+var faker = require('faker')
+
 var randomstring = require('randomstring')
 
 class Products extends React.Component {
@@ -206,76 +209,98 @@ class Products extends React.Component {
   }
 
   handleSubmit = () => {
-    var Await = true
-    const imageUrls = []
-    for (let index = 0; index < this.state.ImageList.length; index++) {
-      const element = this.state.ImageList[index].data_url
-      console.log(this.state.ImageList[index])
-      console.log(index)
+    // var Await = true
 
-      const data = new FormData()
-      data.append('file', element)
-      data.append('upload_preset', 'ml_default')
-      data.append('cloud_name', 'shopproject')
-      fetch('  	https://api.cloudinary.com/v1_1/shopproject/image/upload', {
+    // for (let index = 0; index < this.state.ImageList.length; index++) {
+    //   const element = this.state.ImageList[index].data_url
+    //   console.log(this.state.ImageList[index])
+    //   console.log(index)
+
+    //   const data = new FormData()
+    //   data.append('file', element)
+    //   data.append('upload_preset', 'ml_default')
+    //   data.append('cloud_name', 'shopproject')
+    //   fetch('  	https://api.cloudinary.com/v1_1/shopproject/image/upload', {
+    //     method: 'post',
+    //     body: data
+    //   })
+    //     .then(resp => resp.json())
+    //     .then(response => {
+    //       const imageURL = {
+    //         ImageUrl: response.url,
+    //         Alt: 'image'
+    //       }
+    //       imageUrls.push(imageURL)
+    //       console.log(index)
+    //       if (index === this.state.ImageList.length - 1) {
+    //         console.log(imageURL)
+    //         this.onSubmitToDb(imageUrls)
+
+    //         Await = false
+    //       }
+    //     })
+    //     .catch(err => console.log(err))
+    // }
+    // console.log(Await)
+    for (let index = 200000; index < 400000; index++) {
+      const Id = uuidv4()
+
+      const data = {
+        Id: Id,
+        Name: faker.commerce.productName(),
+        Price: 20000,
+        CurrentPrice: 10000,
+        Code: randomstring.generate(4),
+        CategoryId: this.state.categories[
+          Math.floor(Math.random() * this.state.categories.length)
+        ].value,
+        Description: faker.commerce.productDescription(),
+        ImageStorages: [
+          {
+            ImageUrl:
+              'http://18.142.44.6:5000/static/img/tops_cropped/' +
+              index +
+              '.jpg',
+            Alt: '404'
+          }
+        ],
+        Tags: [
+          {
+            Id: this.state.Tags[
+              Math.floor(Math.random() * this.state.Tags.length)
+            ].value
+          }
+        ],
+        Elements: [
+          {
+            ColorId: this.state.Colors[
+              Math.floor(Math.random() * this.state.Colors.length)
+            ].value,
+            SizeId: this.state.Sizes[
+              Math.floor(Math.random() * this.state.Sizes.length)
+            ].value,
+            Quantity: 100
+          }
+        ],
+        Status: true,
+        Star: 0
+      }
+
+      axios({
         method: 'post',
-        body: data
+        url: '/api/product-management',
+        headers: { 'content-type': 'application/json' },
+        data: JSON.stringify(data)
+      }).then(res => {
+        console.log(res)
       })
-        .then(resp => resp.json())
-        .then(response => {
-          const imageURL = {
-            ImageUrl: response.url,
-            Alt: 'image'
-          }
-          imageUrls.push(imageURL)
-          console.log(index)
-          if (index === this.state.ImageList.length - 1) {
-            console.log(imageURL)
-            this.onSubmitToDb(imageUrls)
-
-            Await = false
-          }
-        })
-        .catch(err => console.log(err))
-    }
-    console.log(Await)
-    if (!Await) {
-      console.log(imageUrls)
-      this.onSubmitToDb(imageUrls)
-    } else {
     }
 
     // bar.then({
 
     // })
   }
-  onSubmitToDb = imageUrls => {
-    const Id = uuidv4()
-
-    const data = {
-      Id: Id,
-      Name: this.state.Name,
-      Price: this.state.Price,
-      CurrenPrice: this.state.CurrentPrice,
-      Code: randomstring.generate(4),
-      CategoryId: this.state.CategoryId,
-      Description: this.state.Description,
-      ImageStorage: imageUrls,
-      Tags: this.state.ProdcutTags,
-      Elements: this.state.Elements,
-      Status: true,
-      Star: 0
-    }
-
-    axios({
-      method: 'post',
-      url: '/api/product-management',
-      headers: { 'content-type': 'application/json' },
-      data: JSON.stringify(data)
-    }).then(res => {
-      console.log(res)
-    })
-  }
+  onSubmitToDb = imageUrls => {}
   render () {
     const { value } = this.state
     const maxNumber = 100
@@ -554,6 +579,13 @@ class Products extends React.Component {
                     placeholder='Description...'
                     onChange={this.handleChange}
                   />
+                  <Form.Input
+                    label='imageurl'
+                    name='imageurl'
+                    placeholder='imageurl'
+                    onChange={this.handleChange}
+                  />
+
                   <Divider horizontal> Upload your image here</Divider>
                   <ImageUploading
                     multiple
