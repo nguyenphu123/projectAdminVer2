@@ -355,6 +355,10 @@ class Products extends React.Component {
     })
   }
   onSubmitChange = () => {
+    this.setState({
+      LoadingOnProduct: true
+    })
+
     const data = {
       Name:
         this.state.Name === '' ? this.state.currentItem.Name : this.state.Name,
@@ -398,7 +402,15 @@ class Products extends React.Component {
         Name: '',
         Price: '',
         CurrentPrice: '',
-        Description: ''
+        Description: '',
+        updateImages: [],
+
+        LoadingOnProduct: false
+      })
+      notification['success']({
+        message: 'update product',
+        description: 'update successfully.',
+        duration: 10
       })
     })
   }
