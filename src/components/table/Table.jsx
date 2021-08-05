@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 
 import './table.css'
-const Table = props => {
+const MyTable = props => {
   const initDataShow =
     props.limit && props.bodyData
       ? props.bodyData.slice(0, Number(props.limit))
@@ -95,4 +95,4 @@ const Table = props => {
   )
 }
 
-export default Table
+export default MyTable

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 import Modal from 'react-awesome-modal'
 
-import Table from '../components/table/Table'
+import MyTable from '../components/table/Table'
 import 'semantic-ui-css/semantic.min.css'
 import {
   Divider,
@@ -12,10 +12,16 @@ import {
   Label,
   Icon,
   Segment,
-  Tab
+  Tab,
+  Button
 } from 'semantic-ui-react'
 
 import customerList from '../assets/JsonData/customers-list.json'
+import Table from 'antd/lib/table'
+import 'antd/lib/table/style/css'
+import { Input } from 'antd'
+
+const Search = Input.Search
 
 class Customers extends React.Component {
   constructor () {
@@ -37,17 +43,7 @@ class Customers extends React.Component {
     }).then(res => {
       console.log(res)
       console.log(res.data)
-      //   for (let index = 0; index < res.data.length; index++) {
-      //     const element = res.data[index]
-      //     this.state.user.push(element)
-      //   }
-      //   console.log(this.state.user)
 
-      //     this.setState(previousState => ({
-      //       user: [...previousState.user, ...res.data]
-      //     }))
-      //   var newArray = this.state.user.concat(res.data)
-      //   console.log(this.state.user)
       this.setState({
         isLoading: false,
         user: res.data
@@ -60,38 +56,56 @@ class Customers extends React.Component {
       currentItem: item
     })
   }
+  handleSearch = searchText => {
+    const filteredEvents = this.state.user.filter(({ Name }) => {
+      Name = Name.toLowerCase()
+      return Name.includes(searchText.toLowerCase())
+    })
+
+    this.setState({
+      user: filteredEvents
+    })
+  }
 
   render () {
-    let customerTableHead = [
-      'Id',
-      'UserName',
-      'RankId',
-      'RoleId',
-      'Name',
-      'Phone',
-      'Email',
-      'Address',
-      'Gender',
-      'Status',
-      'Point'
-    ]
-    let renderHead = (item, index) => <th key={index}>{item}</th>
+    const tableColumns = [
+      {
+        title: 'UserName',
+        dataIndex: 'UserName',
+        key: 'UserName'
+      },
 
-    let renderBody = (item, index) => (
-      <tr key={index} onClick={() => this.onView(item)}>
-        <td>{item.Id}</td>
-        <td>{item.UserName}</td>
-        <td>{item.RankId}</td>
-        <td>{item.RoleId}</td>
-        <td>{item.Name}</td>
-        <td>{item.Phone}</td>
-        <td>{item.Email}</td>
-        <td>{item.Address}</td>
-        <td>{item.Gender}</td>
-        <td>{item.Status}</td>
-        <td>{item.Point}</td>
-      </tr>
-    )
+      {
+        title: 'Name',
+        dataIndex: 'Name',
+        key: 'Name'
+      },
+      {
+        title: 'Phone',
+        dataIndex: 'Phone',
+        key: 'Phone'
+      },
+      {
+        title: 'Gender',
+        render: (text, record) => (record.Gender ? <> male </> : <>female</>),
+
+        key: 'Gender'
+      },
+      {
+        title: 'Point',
+        dataIndex: 'Point',
+        key: 'Point'
+      },
+      {
+        title: 'Action',
+        key: 'action',
+        render: (text, record) => (
+          <Button type='primary' onClick={() => this.onView(record)}>
+            Action
+          </Button>
+        )
+      }
+    ]
 
     if (this.state.isLoading) {
       return <>Still loading...</>
@@ -245,13 +259,13 @@ class Customers extends React.Component {
             <div className='col-12'>
               <div className='card'>
                 <div className='card__body'>
-                  <Table
-                    limit='1000'
-                    headData={customerTableHead}
-                    renderHead={(item, index) => renderHead(item, index)}
-                    bodyData={this.state.user}
-                    renderBody={(item, index) => renderBody(item, index)}
+                  <Search
+                    placeholder='Enter name'
+                    onSearch={this.handleSearch}
+                    style={{ width: 200 }}
                   />
+
+                  <Table dataSource={this.state.user} columns={tableColumns} />
                 </div>
               </div>
             </div>

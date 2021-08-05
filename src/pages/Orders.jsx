@@ -1,56 +1,70 @@
 import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 import Modal from 'react-awesome-modal'
+import NumberFormat from 'react-number-format'
+import MyTable from '../components/table/Table'
+import {
+  Divider,
+  Grid,
+  Image,
+  Header,
+  Label,
+  Icon,
+  Segment,
+  Tab,
+  Dropdown,
+  Button,
+  Form
+} from 'semantic-ui-react'
+import Table from 'antd/lib/table'
+import 'antd/lib/table/style/css'
+import { Input } from 'antd'
 
-import Table from '../components/table/Table'
-
-import customerList from '../assets/JsonData/customers-list.json'
-const customerTableHead = [
-  'Id',
-  'UserName',
-  'RankId',
-  'RoleId',
-  'Name',
-  'Phone',
-  'Email',
-  'Address',
-  'Gender',
-  'Status',
-  'Point'
-]
-const renderHead = (item, index) => <th key={index}>{item}</th>
-
-const renderBody = (item, index) => (
-  <a>
-    <tr key={index}>
-      <td>{item.Id}</td>
-      <td>{item.UserName}</td>
-      <td>{item.RankId}</td>
-      <td>{item.RoleId}</td>
-      <td>{item.Name}</td>
-      <td>{item.Phone}</td>
-      <td>{item.Email}</td>
-      <td>{item.Address}</td>
-      <td>{item.Gender}</td>
-      <td>{item.Status}</td>
-      <td>{item.Point}</td>
-    </tr>
-  </a>
-)
+const Search = Input.Search
 
 class Orders extends React.Component {
   constructor () {
     super()
 
     this.state = {
-      user: []
+      Orders: []
     }
+  }
+  onUpdate = item => {
+    const order = {
+      Id: item.Id,
+      UserId: item.UserId,
+      TotalPrice: item.TotalPrice,
+      AddressShipping: item.AddressShipping,
+      Phone: item.Phone,
+      Date: item.Date,
+      Status: true
+      // OrderDetails: item.Orderdetails,
+      // Ship: item.Ship
+    }
+    axios({
+      method: 'put',
+      url: '/api/order-management/users/orders',
+      data: order
+    }).then(res => {
+      console.log(res)
+      axios({
+        method: 'GET',
+        url: '/api/order-management/orders'
+      }).then(res => {
+        console.log(res)
+        console.log(res.data)
+        this.setState({
+          Orders: res.data
+        })
+      })
+    })
   }
 
   componentWillMount () {
     axios({
       method: 'GET',
-      url: '/api/user-management/users'
+      url: '/api/order-management/orders'
     }).then(res => {
       console.log(res)
       console.log(res.data)
@@ -59,8 +73,83 @@ class Orders extends React.Component {
       })
     })
   }
+  handleSearch = searchText => {
+    const filteredEvents = this.state.Orders.filter(({ AddressShipping }) => {
+      AddressShipping = AddressShipping.toLowerCase()
+      return AddressShipping.includes(searchText.toLowerCase())
+    })
+
+    this.setState({
+      Orders: filteredEvents
+    })
+  }
 
   render () {
+    const tableColumns = [
+      {
+        title: 'Id',
+        dataIndex: 'Id',
+        key: 'Id'
+      },
+      {
+        title: 'Date',
+        dataIndex: 'Date',
+        key: 'Date'
+      },
+      {
+        title: 'Total',
+        render: (text, record) => (
+          <NumberFormat
+            value={record.TotalPrice}
+            className='foo'
+            displayType={'text'}
+            thousandSeparator={true}
+            prefix={''}
+            renderText={(value, props) => <div {...props}>{value}VND</div>}
+          />
+        ),
+
+        key: 'Total',
+        defaultSortOrder: 'descend',
+        sorter: (a, b) => a.Total - b.Total
+      },
+      {
+        title: 'Number of products',
+        render: (text, record) => <h4>{record.Orderdetails.length}</h4>,
+        key: 'Number of products'
+      },
+      {
+        title: 'address',
+        dataIndex: 'AddressShipping',
+        key: 'address'
+      },
+      {
+        title: 'Paid status',
+        render: (text, record) =>
+          record.Status ? (
+            <Header as='h4' color='green'>
+              Paid
+            </Header>
+          ) : (
+            <Header as='h4' color='red'>
+              Not paid
+            </Header>
+          ),
+
+        key: 'Paid status'
+      },
+
+      {
+        title: 'Action',
+        key: 'action',
+        render: (text, record) => (
+          <Button type='primary' onClick={() => this.onUpdate(record)}>
+            Action
+          </Button>
+        )
+      }
+    ]
+
     if (this.state.Orders === undefined || this.state.Orders === []) {
       return <>Still loading...</>
     } else {
@@ -71,15 +160,16 @@ class Orders extends React.Component {
             <div className='col-12'>
               <div className='card'>
                 <div className='card__body'>
-                  {this.state.user === [] ? null : (
-                    <Table
-                      limit='1000'
-                      headData={customerTableHead}
-                      renderHead={(item, index) => renderHead(item, index)}
-                      bodyData={this.state.Orders}
-                      renderBody={(item, index) => renderBody(item, index)}
-                    />
-                  )}
+                  <Search
+                    placeholder='Enter shipping address'
+                    onSearch={this.handleSearch}
+                    style={{ width: 200 }}
+                  />
+
+                  <Table
+                    dataSource={this.state.Orders}
+                    columns={tableColumns}
+                  />
                 </div>
               </div>
             </div>

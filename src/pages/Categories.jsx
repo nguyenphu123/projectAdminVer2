@@ -3,7 +3,7 @@ import axios from 'axios'
 import Modal from 'react-awesome-modal'
 import ImageUploading from 'react-images-uploading'
 
-import Table from '../components/table/Table'
+import MyTable from '../components/table/Table'
 import {
   Divider,
   Grid,
@@ -18,6 +18,8 @@ import {
   Form
 } from 'semantic-ui-react'
 import { RMIUploader } from 'react-multiple-image-uploader'
+import { ToastContainer, toast } from 'react-toastify'
+import Table from 'antd/lib/table'
 
 import customerList from '../assets/JsonData/customers-list.json'
 
@@ -32,7 +34,9 @@ class Categories extends React.Component {
       currentItem: {},
       Name: '',
       ParrentId: '',
-      ImageList: []
+      ImageList: [],
+      edit: false,
+      parrentCategories: []
     }
     this.onView = this.onView.bind(this)
   }
@@ -42,11 +46,24 @@ class Categories extends React.Component {
       method: 'GET',
       url: '/api/category-management'
     }).then(res => {
-      console.log(res)
-      console.log(res.data)
+      for (let index = 0; index < res.data.length; index++) {
+        const element = res.data[index]
+        if (res.data[index].SubCategories.length !== 0) {
+          for (
+            let jindex = 0;
+            jindex < res.data[index].SubCategories.length;
+            jindex++
+          ) {
+            const subelement = res.data[index].SubCategories[jindex]
+
+            this.state.Categories.push(subelement)
+          }
+        }
+        this.state.Categories.push(element)
+        this.state.parrentCategories.push(element)
+      }
       this.setState({
-        isLoading: false,
-        Categories: res.data
+        isLoading: false
       })
     })
   }
@@ -79,34 +96,75 @@ class Categories extends React.Component {
       data: JSON.stringify(data)
     }).then(res => {
       console.log(res)
+      axios({
+        method: 'GET',
+        url: '/api/category-management'
+      }).then(res => {
+        console.log(res)
+        console.log(res.data)
+        this.setState({
+          isLoading: false,
+          Categories: res.data
+        })
+        toast.success('add new category successfully')
+      })
+    })
+  }
+  onSubmitChange = () => {
+    const data = {
+      Id: this.state.currentItem.Id,
+      Name:
+        this.state.Name === '' ? this.state.currentItem.Name : this.state.Name,
+      ParentId: this.state.currentItem.ParrentId
+    }
+
+    axios({
+      method: 'put',
+      url: '/api/category-management',
+      headers: { 'content-type': 'application/json' },
+      data: JSON.stringify(data)
+    }).then(res => {
+      console.log(res)
+      this.setState({
+        Name: ''
+      })
+      axios({
+        method: 'GET',
+        url: '/api/category-management'
+      }).then(res => {
+        console.log(res)
+        console.log(res.data)
+        this.setState({
+          isLoading: false,
+          Categories: res.data
+        })
+        toast.success('update category successfully')
+      })
     })
   }
 
   render () {
-    const customerTableHead = ['Id', 'Name']
-    const renderHead = (item, index) => <th key={index}>{item}</th>
-    const maxNumber = 1
-    const onChange = (imageList, addUpdateIndex) => {
-      // data for submit
-      console.log(imageList, addUpdateIndex)
-      this.setState({
-        ImageList: imageList
-      })
-    }
-
-    const renderBody = (item, index) => (
-      <tr key={index} onClick={() => this.onView(item)}>
-        <td>{item.Id}</td>
-
-        <td>{item.Name}</td>
-
-        {/* {item.SubCategories.length === 0 ? null : (
-      <td>
-       
-      </td>
-    )} */}
-      </tr>
-    )
+    const tableColumns = [
+      {
+        title: 'Id',
+        dataIndex: 'Id',
+        key: 'Id'
+      },
+      {
+        title: 'Name',
+        dataIndex: 'Name',
+        key: 'Name'
+      },
+      {
+        title: 'Action',
+        key: 'action',
+        render: (text, record) => (
+          <Button type='primary' onClick={() => this.onView(record)}>
+            Action
+          </Button>
+        )
+      }
+    ]
 
     if (this.state.isLoading) {
       return <>Still loading...</>
@@ -126,39 +184,29 @@ class Categories extends React.Component {
 
               <div style={{ width: '300px' }}>
                 <Segment style={{ border: '0px' }} clearing>
-                  <Header as='h5' floated='left' color='black'>
-                    Name:
-                  </Header>
-                  <Header as='h5' floated='right' color='grey'>
-                    {this.state.currentItem.Name}
-                  </Header>
+                  <Form.Input
+                    fluid
+                    label='Name'
+                    name='Name'
+                    placeholder='Name'
+                    disabled={!this.state.edit}
+                    value={this.state.currentItem.Name}
+                    onChange={this.handleChange}
+                  />
+                </Segment>
+                <Segment basic textAlign='center'>
+                  <Form onSubmit={this.handleSubmit}>
+                    <Form.Input
+                      fluid
+                      label='Name'
+                      name='Name'
+                      placeholder='Name'
+                      onChange={this.handleChange}
+                    />
+                    <Form.Button content='Submit' />
+                  </Form>
                 </Segment>
               </div>
-            </Tab.Pane>
-          )
-        },
-        {
-          menuItem: { key: 'elemwnt', icon: 'eye', content: 'Element' },
-          render: () => (
-            <Tab.Pane attached={false}>
-              <Form onSubmit={this.handleSubmit}>
-                <Form.Input
-                  fluid
-                  label='Name'
-                  name='Name'
-                  placeholder='Name'
-                  onChange={this.handleChange}
-                />
-                <Form.Button content='Submit' />
-              </Form>
-
-              <Table
-                limit='1000'
-                headData={customerTableHead}
-                renderHead={(item, index) => renderHead(item, index)}
-                bodyData={this.state.currentItem.SubCategories}
-                renderBody={(item, index) => renderBody(item, index)}
-              />
             </Tab.Pane>
           )
         }
@@ -182,21 +230,26 @@ class Categories extends React.Component {
 
             <div style={{ marginLeft: '10px', marginTop: '10px' }}>
               <Grid>
-                <Grid.Column width={3}>
-                  <Image src='https://react.semantic-ui.com/images/wireframe/image.png' />
-                </Grid.Column>
+                <Grid.Column width={3}></Grid.Column>
                 <Grid.Column width={11}>
-                  <Header as='h1'>{this.state.currentItem.Name}</Header>
-                  <Tab
-                    menu={{
-                      color: 'green',
-                      attached: false,
-                      tabular: false,
-                      secondary: true,
-                      pointing: true
-                    }}
-                    panes={panes}
-                  />
+                  <Form>
+                    <Header as='h1'>{this.state.currentItem.Name}</Header>
+                    <Tab
+                      menu={{
+                        color: 'green',
+                        attached: false,
+                        tabular: false,
+                        secondary: true,
+                        pointing: true
+                      }}
+                      panes={panes}
+                    />
+                    {this.state.edit ? (
+                      <Button size='big' onClick={this.onSubmitChange} primary>
+                        Save
+                      </Button>
+                    ) : null}
+                  </Form>
                 </Grid.Column>
                 <Grid.Column width={2}>
                   <Label color={'green'} key={'green'}>
@@ -217,80 +270,21 @@ class Categories extends React.Component {
               />
               <Form.Button content='Submit' />
             </Form>
-            <Divider horizontal> Upload your image here</Divider>
-            <ImageUploading
-              multiple
-              value={this.state.ImageList}
-              onChange={this.onChange}
-              maxNumber={this.maxNumber}
-              dataURLKey='data_url'
-            >
-              {({
-                imageList,
-                onImageUpload,
-                onImageRemoveAll,
-                onImageUpdate,
-                onImageRemove,
-                isDragging,
-                dragProps
-              }) => (
-                <Segment placeholder>
-                  <Header icon>
-                    <div className='upload__image-wrapper'>
-                      {imageList.map((image, index) => (
-                        <div key={index} className='image-item'>
-                          <img src={image.data_url} alt='' />
-                          <div className='image-item__btn-wrapper'>
-                            <Button
-                              inverted
-                              color='blue'
-                              style={{ marginTop: '10px' }}
-                              onClick={() => onImageUpdate(index)}
-                            >
-                              Update
-                            </Button>
-                            <Button
-                              inverted
-                              color='blue'
-                              style={{ marginTop: '10px' }}
-                              onClick={() => onImageRemove(index)}
-                            >
-                              Remove
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </Header>
-                  <Button
-                    fluid
-                    icon='upload'
-                    style={isDragging ? { color: 'red' } : null}
-                    onClick={onImageUpload}
-                    {...dragProps}
-                  ></Button>
-                </Segment>
-              )}
-            </ImageUploading>
           </Segment>
 
           <div className='row'>
             <div className='col-12'>
               <div className='card'>
                 <div className='card__body'>
-                  {this.state.Categories === [] ? null : (
-                    <Table
-                      limit='1000'
-                      headData={customerTableHead}
-                      renderHead={(item, index) => renderHead(item, index)}
-                      bodyData={this.state.Categories}
-                      renderBody={(item, index) => renderBody(item, index)}
-                    />
-                  )}
+                  <Table
+                    dataSource={this.state.Categories}
+                    columns={tableColumns}
+                  />
                 </div>
               </div>
             </div>
           </div>
+          <ToastContainer autoClose={5000} />
         </div>
       )
     }
