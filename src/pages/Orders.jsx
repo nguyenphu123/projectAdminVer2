@@ -139,15 +139,15 @@ class Orders extends React.Component {
         key: 'Paid status'
       },
 
-      {
-        title: 'Action',
-        key: 'action',
-        render: (text, record) => (
-          <Button type='primary' onClick={() => this.onUpdate(record)}>
-            Action
-          </Button>
-        )
-      }
+      // {
+      //   title: 'Action',
+      //   key: 'action',
+      //   render: (text, record) => (
+      //     <Button type='primary' onClick={() => this.onUpdate(record)}>
+      //       Update
+      //     </Button>
+      //   )
+      // }
     ]
 
     if (this.state.Orders === undefined || this.state.Orders === []) {

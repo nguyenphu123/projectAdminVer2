@@ -7,7 +7,6 @@ import 'semantic-ui-css/semantic.min.css'
 import {
   Divider,
   Grid,
-  Image,
   Header,
   Label,
   Icon,
@@ -19,6 +18,7 @@ import {
 } from 'semantic-ui-react'
 import NumberFormat from 'react-number-format'
 import { ToastContainer, toast } from 'react-toastify'
+import { Image } from 'antd'
 
 import Table from 'antd/lib/table'
 import 'antd/lib/table/style/css'
@@ -65,11 +65,17 @@ class Products extends React.Component {
       edit: false,
       LoadingOnProduct: false,
       LoadingOnElement: false,
-      updateImages: []
+      updateImages: [],
+      updateName: '',
+      updateCurPrice: 0,
+      updateDes: '',
+      updatePrice: 0,
+      currentImage: []
     }
     this.onView = this.onView.bind(this)
     this.onViewAddProduct = this.onViewAddProduct.bind(this)
     this.onAddElement = this.onAddElement.bind(this)
+    this.onAddCurrentElement = this.onAddCurrentElement.bind(this)
 
     // this.handleSubmit = this.handleSubmit.bind(this)
   }
@@ -186,7 +192,12 @@ class Products extends React.Component {
   onView (item) {
     this.setState({
       visibility: !this.state.visibility,
-      currentItem: item
+      currentItem: item,
+      updateName: item.Name,
+      updateCurPrice: item.CurrentPrice,
+      updateDes: item.Description,
+      updatePrice: item.Price,
+      currentImage: item.ImageStorages
     })
   }
   onViewAddProduct () {
@@ -231,26 +242,72 @@ class Products extends React.Component {
       },
       function () {
         const element = {
-          Quantity: this.state.Quantity,
-          ColorId: this.state.ColorId,
-          SizeId: this.state.SizeId
+          Quantity: this.state.newQuantity,
+          ColorId: this.state.newColorId,
+          SizeId: this.state.newSizeId
         }
         const check_index = this.state.currentItem.Elements.findIndex(
           item =>
-            item.ColorId === this.state.ColorId &&
-            item.SizeId === this.state.SizeId
+            item.Color.Id === this.state.newColorId &&
+            item.Size.Id === this.state.newSizeId
         )
         if (check_index !== -1) {
           this.state.currentItem.Elements[
             check_index
-          ].Quantity = this.state.Quantity
-          this.setState({
-            LoadingOnElement: false
+          ].Quantity = this.state.newQuantity
+          axios({
+            method: 'put',
+            url: '/api/element-management',
+            headers: { 'content-type': 'application/json' },
+            data: JSON.stringify({
+              ProductId: this.state.currentItem.Id,
+              Quantity: this.state.newQuantity,
+              ElementId: this.state.currentItem.Elements[check_index].Id
+            })
+          }).then(res => {
+            this.setState({
+              LoadingOnElement: false
+            })
+
+            notification['success']({
+              message: 'update element',
+              description: 'update successfully.',
+              duration: 10
+            })
           })
         } else {
-          this.state.currentItem.Elements.push(element)
-          this.setState({
-            LoadingOnElement: false
+          axios({
+            method: 'post',
+            url: '/api/element-management',
+            headers: { 'content-type': 'application/json' },
+            data: JSON.stringify({
+              ProductId: this.state.currentItem.Id,
+              Quantity: this.state.newQuantity,
+              ColorId: this.state.newColorId,
+              SizeId: this.state.newSizeId
+            })
+          }).then(res => {
+            axios({
+              method: 'GET',
+              url: '/api/element-management'
+            }).then(res => {
+              const check_index = res.data.findIndex(
+                item =>
+                  item.Color.Id === this.state.newColorId &&
+                  item.Size.Id === this.state.newSizeId
+              )
+              if (check_index !== -1) {
+                this.state.currentItem.Elements.push(res.data[check_index])
+                this.setState({
+                  LoadingOnElement: false
+                })
+                notification['success']({
+                  message: 'update element',
+                  description: 'update successfully.',
+                  duration: 10
+                })
+              }
+            })
           })
         }
       }
@@ -271,16 +328,6 @@ class Products extends React.Component {
         })
       }
     }
-  }
-  onUpload = data => {
-    this.state.files.push(data)
-    console.log('Upload files', data)
-  }
-  onSelect = data => {
-    console.log('Select files', data)
-  }
-  onRemove = id => {
-    console.log('Remove image id', id)
   }
 
   handleSubmit = () => {
@@ -354,43 +401,82 @@ class Products extends React.Component {
       })
     })
   }
-  onSubmitChange = () => {
+  handleSubmitChange = () => {
     this.setState({
       LoadingOnProduct: true
     })
+    if (this.state.updateImages.length !== 0) {
+      var Await = true
+      const imageUrls = []
+      for (let index = 0; index < this.state.updateImages.length; index++) {
+        const element = this.state.updateImages[index].data_url
 
-    const data = {
-      Name:
-        this.state.Name === '' ? this.state.currentItem.Name : this.state.Name,
-      Price:
-        this.state.Price === 0
-          ? parseFloat(this.state.currentItem.Price)
-          : parseFloat(this.state.Price),
-      CurrentPrice:
-        this.state.CurrentPrice === 0
-          ? parseFloat(this.state.currentItem.CurrentPrice)
-          : parseFloat(this.state.CurrentPrice),
-      Code: this.state.currentItem.Code,
-      CategoryId: this.state.currentItem.CategoryId,
-      Description:
-        this.state.Description === ''
-          ? this.state.currentItem.Description
-          : this.state.Description,
-      ImageStorages:
-        this.state.updateImages.length === 0
-          ? this.state.currentItem.ImageStorages
-          : this.state.updateImages,
-      Tags: this.state.currentItem.Tags,
+        const data = new FormData()
+        data.append('file', element)
+        data.append('upload_preset', 'ml_default')
+        data.append('cloud_name', 'shopproject')
+        fetch('  	https://api.cloudinary.com/v1_1/shopproject/image/upload', {
+          method: 'post',
+          body: data
+        })
+          .then(resp => resp.json())
+          .then(response => {
+            const imageURL = {
+              ImageUrl: response.url,
+              Alt: 'image'
+            }
+            imageUrls.push(imageURL)
 
-      Status: true,
-      DateTime: new Date()
-        .toISOString()
-        .slice(0, 19)
-        .replace('T', ' '),
-      Star:
-        this.state.currentItem.Star === 'NaN' ? 0 : this.state.currentItem.Star
+            if (index === this.state.ImageList.length) {
+              Await = false
+            }
+          })
+          .catch(err => console.log(err))
+      }
+
+      setTimeout(() => {
+        this.onSubmitChange(this.state.currentImage.concat(imageUrls))
+      }, 10000)
+    } else {
+      this.onSubmitChange(this.state.currentImage)
     }
+  }
+  onSubmitChange = imageUrls => {
+    const data = {
+      Id: this.state.currentItem.Id,
+      ModifiedProduct: {
+        Name:
+          this.state.updateName === ''
+            ? this.state.currentItem.Name
+            : this.state.updateName,
+        Price:
+          this.state.updatePrice === 0
+            ? parseFloat(this.state.currentItem.Price)
+            : parseFloat(this.state.updatePrice),
+        CurrentPrice:
+          this.state.updateCurPrice === 0
+            ? parseFloat(this.state.currentItem.CurrentPrice)
+            : parseFloat(this.state.updateCurPrice),
+        Code: this.state.currentItem.Code,
+        CategoryId: this.state.currentItem.CategoryId,
+        Description:
+          this.state.Description === ''
+            ? this.state.currentItem.Description
+            : this.state.updateDes,
+        ImageStorages: imageUrls,
+        Tags: this.state.currentItem.Tags,
 
+        Status: true,
+        DateTime: new Date()
+          .toISOString()
+          .slice(0, 19)
+          .replace('T', ' '),
+        Star:
+          this.state.currentItem.Star === 'NaN'
+            ? 0
+            : this.state.currentItem.Star
+      }
+    }
     axios({
       method: 'put',
       url: '/api/product-management',
@@ -398,22 +484,139 @@ class Products extends React.Component {
       data: JSON.stringify(data)
     }).then(res => {
       console.log(res)
-      this.setState({
-        Name: '',
-        Price: '',
-        CurrentPrice: '',
-        Description: '',
-        updateImages: [],
+      axios({
+        method: 'GET',
+        url: '/api/product-management?sort=up&pageIndex=1&pageSize=1000'
+      }).then(res => {
+        console.log(res)
+        console.log(res.data)
+        this.setState({
+          Name: '',
+          Price: '',
+          CurrentPrice: '',
+          Description: '',
+          updateImages: [],
 
-        LoadingOnProduct: false
-      })
-      notification['success']({
-        message: 'update product',
-        description: 'update successfully.',
-        duration: 10
+          LoadingOnProduct: false,
+          product: res.data
+        })
+        notification['success']({
+          message: 'update product',
+          description: 'update successfully.',
+          duration: 10
+        })
       })
     })
   }
+  onSubmitDisabled = item => {
+    this.setState({
+      LoadingOnProduct: true
+    })
+
+    const data = {
+      Id: item.Id,
+      ModifiedProduct: {
+        Name: item.Name,
+
+        Price: parseFloat(item.Price),
+
+        CurrentPrice: parseFloat(item.CurrentPrice),
+
+        Code: item.Code,
+        CategoryId: item.CategoryId,
+        Description: item.Description,
+
+        ImageStorages: item.ImageStorages,
+        Tags: item.Tags,
+
+        Status: false,
+        DateTime: new Date()
+          .toISOString()
+          .slice(0, 19)
+          .replace('T', ' '),
+        Star: item.Star === 'NaN' ? 0 : item.Star
+      }
+    }
+    axios({
+      method: 'put',
+      url: '/api/product-management',
+      headers: { 'content-type': 'application/json' },
+      data: JSON.stringify(data)
+    }).then(res => {
+      console.log(res)
+      axios({
+        method: 'GET',
+        url: '/api/product-management?sort=up&pageIndex=1&pageSize=1000'
+      }).then(res => {
+        console.log(res)
+        console.log(res.data)
+        this.setState({
+          LoadingOnProduct: false,
+          product: res.data
+        })
+        notification['success']({
+          message: 'update product',
+          description: 'update successfully.',
+          duration: 10
+        })
+      })
+    })
+  }
+  onSubmitActive = item => {
+    this.setState({
+      LoadingOnProduct: true
+    })
+
+    const data = {
+      Id: item.Id,
+      ModifiedProduct: {
+        Name: item.Name,
+
+        Price: parseFloat(item.Price),
+
+        CurrentPrice: parseFloat(item.CurrentPrice),
+
+        Code: item.Code,
+        CategoryId: item.CategoryId,
+        Description: item.Description,
+
+        ImageStorages: item.ImageStorages,
+        Tags: item.Tags,
+
+        Status: true,
+        DateTime: new Date()
+          .toISOString()
+          .slice(0, 19)
+          .replace('T', ' '),
+        Star: item.Star === 'NaN' ? 0 : item.Star
+      }
+    }
+    axios({
+      method: 'put',
+      url: '/api/product-management',
+      headers: { 'content-type': 'application/json' },
+      data: JSON.stringify(data)
+    }).then(res => {
+      console.log(res)
+      axios({
+        method: 'GET',
+        url: '/api/product-management?sort=up&pageIndex=1&pageSize=1000'
+      }).then(res => {
+        console.log(res)
+        console.log(res.data)
+        this.setState({
+          LoadingOnProduct: false,
+          product: res.data
+        })
+        notification['success']({
+          message: 'update product',
+          description: 'update successfully.',
+          duration: 10
+        })
+      })
+    })
+  }
+
   handleSearch = searchText => {
     const filteredEvents = this.state.product.filter(({ Name }) => {
       Name = Name.toLowerCase()
@@ -488,9 +691,47 @@ class Products extends React.Component {
         key: 'Star'
       },
       {
-        title: 'Action',
+        title: ' Status',
         key: 'action',
-        render: (text, record) => <Button type='primary'>Action</Button>
+        render: (text, record) => (
+          <>{record.Status ? <>active</> : <>disabled</>}</>
+        )
+      },
+      {
+        title: ' View Detail',
+        key: 'action',
+        render: (text, record) => (
+          <Button type='primary' onClick={() => this.onView(record)}>
+            View Detail
+          </Button>
+        )
+      },
+      {
+        title: 'Remove',
+        key: 'action',
+        render: (text, record) => (
+          <>
+            {record.Status ? (
+              <>
+                <Button
+                  type='primary'
+                  onClick={() => this.onSubmitDisabled(record)}
+                >
+                  remove
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  type='primary'
+                  onClick={() => this.onSubmitActive(record)}
+                >
+                  Active
+                </Button>
+              </>
+            )}
+          </>
+        )
       }
     ]
     const tableColumnsElement = [
@@ -509,12 +750,24 @@ class Products extends React.Component {
         title: 'Quantity',
         dataIndex: 'Quantity',
         key: 'Quantity'
-      },
-
+      }
+    ]
+    const tableColumnsElement2 = [
       {
-        title: 'Action',
-        key: 'action',
-        render: (text, record) => <Button type='primary'>Action</Button>
+        title: 'Color',
+        render: (text, record) => returnColorName(record.Color.Id),
+
+        key: 'ColorId'
+      },
+      {
+        title: 'Size',
+        render: (text, record) => returnSizeName(record.Size.Id),
+        key: 'SizeId'
+      },
+      {
+        title: 'Quantity',
+        dataIndex: 'Quantity',
+        key: 'Quantity'
       }
     ]
 
@@ -576,10 +829,10 @@ class Products extends React.Component {
                   <Form.Input
                     fluid
                     label='Price'
-                    name='Price'
+                    name='updatePrice'
                     placeholder='Price'
                     disabled={!this.state.edit}
-                    value={this.state.currentItem.Price}
+                    value={this.state.updatePrice}
                     onChange={this.handleChange}
                   />
                 </Segment>
@@ -590,10 +843,10 @@ class Products extends React.Component {
                   <Form.Input
                     fluid
                     label='Current Price'
-                    name='CurrentPrice'
+                    name='updateCurPrice'
                     placeholder='Current Price'
                     disabled={!this.state.edit}
-                    value={this.state.currentItem.CurrentPrice}
+                    value={this.state.updateCurPrice}
                     onChange={this.handleChange}
                   />
                 </Segment>
@@ -616,10 +869,10 @@ class Products extends React.Component {
                   <Header as='h5' floated='right' color='grey'>
                     <Form.TextArea
                       label='Description'
-                      name='Description'
+                      name='updateDes'
                       placeholder='Description...'
                       disabled={!this.state.edit}
-                      value={this.state.currentItem.Description}
+                      value={this.state.updateDes}
                       onChange={this.handleChange}
                     />
                   </Header>
@@ -632,10 +885,36 @@ class Products extends React.Component {
           menuItem: { key: 'images', icon: 'image', content: 'Image' },
           render: () => (
             <Tab.Pane attached={false}>
+              {this.state.currentImage.map(({ ImageUrl }) => (
+                <Space size={7}>
+                  <Image
+                    width={100}
+                    src={
+                      ImageUrl.includes('http')
+                        ? ImageUrl
+                        : 'http://13.213.30.175:5000/' + ImageUrl
+                    }
+                  />
+                  <Button
+                    type='primary'
+                    onClick={() => {
+                      let check_index = this.state.currentImage.findIndex(
+                        item => item.ImageUrl === ImageUrl
+                      )
+                      if (check_index !== -1) {
+                        this.state.currentImage.splice(check_index, 1)
+                        this.setState({ currentImage: this.state.currentImage })
+                      }
+                    }}
+                  >
+                    Remove
+                  </Button>
+                </Space>
+              ))}
               <Form.Group inline>
                 <ImageUploading
                   multiple
-                  value={this.state.currentItem.ImageStorages}
+                  value={this.state.updateImages}
                   onChange={(imageList, addUpdateIndex) => {
                     // data for submit
                     console.log(imageList, addUpdateIndex)
@@ -708,7 +987,7 @@ class Products extends React.Component {
               <Form.Group inline>
                 <Form.Select
                   fluid
-                  name='ColorId'
+                  name='newColorId'
                   label='Color'
                   options={this.state.Colors}
                   placeholder='Color'
@@ -716,7 +995,7 @@ class Products extends React.Component {
                 />
                 <Form.Select
                   fluid
-                  name='SizeId'
+                  name='newSizeId'
                   label='Size'
                   options={this.state.Sizes}
                   placeholder='Size'
@@ -724,7 +1003,7 @@ class Products extends React.Component {
                 />
                 <Form.Input
                   label='Quantity'
-                  name='Quantity'
+                  name='newQuantity'
                   placeholder='Quantity'
                   onChange={this.handleChange}
                 />
@@ -741,14 +1020,14 @@ class Products extends React.Component {
               ) : (
                 <Table
                   dataSource={this.state.currentItem.Elements}
-                  columns={tableColumnsElement}
+                  columns={tableColumnsElement2}
                 />
               )}
             </Tab.Pane>
           )
         }
       ]
-
+      console.log(this.state.currentItem.Elements)
       return (
         <div>
           <h2 className='page-header'>products</h2>
@@ -770,14 +1049,14 @@ class Products extends React.Component {
                 <Grid.Column width={3}></Grid.Column>
                 <Grid.Column width={11}>
                   <Form>
-                    <Header as='h1'>
+                    <Header as='h3'>
                       <Form.Input
                         fluid
                         label='Name'
-                        name='Name'
+                        name='updateName'
                         placeholder='Name'
                         disabled={!this.state.edit}
-                        value={this.state.currentItem.Name}
+                        value={this.state.updateName}
                         onChange={this.handleChange}
                       />
                       {this.state.LoadingOnProduct ? (
@@ -801,7 +1080,11 @@ class Products extends React.Component {
                       panes={panes}
                     />
                     {this.state.edit ? (
-                      <Button size='big' onClick={this.onSubmitChange} primary>
+                      <Button
+                        size='big'
+                        onClick={this.handleSubmitChange}
+                        primary
+                      >
                         Save
                       </Button>
                     ) : null}

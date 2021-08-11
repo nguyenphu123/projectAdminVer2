@@ -34,6 +34,7 @@ class Customers extends React.Component {
       isLoading: true
     }
     this.onView = this.onView.bind(this)
+    this.onSubmitDisable = this.onSubmitDisable.bind(this)
   }
 
   componentWillMount () {
@@ -56,6 +57,39 @@ class Customers extends React.Component {
       currentItem: item
     })
   }
+  onSubmitDisable (UserInformation) {
+    const authData = {
+      Id: UserInformation.Id,
+      UserName: UserInformation.UserName,
+      PassWord: UserInformation.PassWord,
+      RankId: UserInformation.RankId,
+      RoleId: UserInformation.RoleId,
+      Name: UserInformation.Name,
+      Phone: UserInformation.Phone,
+      Address: UserInformation.Address,
+      Gender: UserInformation.Gender,
+      Point: 0,
+      Email: UserInformation.Email,
+      Rank: UserInformation.Rank,
+      Role: UserInformation.Role,
+      Orders: UserInformation.Orders
+    }
+
+    axios({
+      method: 'put',
+      url: '/api/user-management/users',
+      headers: {},
+      data: authData
+    })
+      .then(res => {
+        toast.success('Change information successful')
+      })
+      .catch(function (error) {
+        console.log('Show error notification!')
+        return Promise.reject(error)
+      })
+  }
+
   handleSearch = searchText => {
     const filteredEvents = this.state.user.filter(({ Name }) => {
       Name = Name.toLowerCase()
@@ -97,11 +131,20 @@ class Customers extends React.Component {
         key: 'Point'
       },
       {
-        title: 'Action',
+        title: 'View detail',
         key: 'action',
         render: (text, record) => (
           <Button type='primary' onClick={() => this.onView(record)}>
-            Action
+            View detail
+          </Button>
+        )
+      },
+      {
+        title: 'Disable',
+        key: 'action',
+        render: (text, record) => (
+          <Button type='primary' onClick={() => this.onSubmitDisable(record)}>
+            Disable
           </Button>
         )
       }
@@ -129,26 +172,6 @@ class Customers extends React.Component {
                   </Header>
                   <Header as='h5' floated='right' color='grey'>
                     {this.state.currentItem.Gender ? <> Male</> : <>Female</>}
-                  </Header>
-                </Segment>
-              </div>
-              <div style={{ width: '300px' }}>
-                <Segment style={{ border: '0px' }} clearing>
-                  <Header as='h5' floated='left' color='black'>
-                    Birthday:
-                  </Header>
-                  <Header as='h5' floated='right' color='grey'>
-                    1/1/1990
-                  </Header>
-                </Segment>
-              </div>
-              <div style={{ width: '300px' }}>
-                <Segment style={{ border: '0px' }} clearing>
-                  <Header as='h5' floated='left' color='black'>
-                    Identity card:
-                  </Header>
-                  <Header as='h5' floated='right' color='grey'>
-                    123456789
                   </Header>
                 </Segment>
               </div>

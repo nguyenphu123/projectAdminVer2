@@ -28,15 +28,13 @@ class Categories extends React.Component {
     super()
 
     this.state = {
-      Categories: [],
+      items: [],
       visibility: false,
       isLoading: true,
       currentItem: {},
       Name: '',
-      ParrentId: '',
-      ImageList: [],
-      edit: false,
-      parrentCategories: []
+      currName: '',
+      edit: false
     }
     this.onView = this.onView.bind(this)
   }
@@ -44,85 +42,45 @@ class Categories extends React.Component {
   componentWillMount () {
     axios({
       method: 'GET',
-      url: '/api/category-management'
+      url: '/api/tag-management'
     }).then(res => {
-      for (let index = 0; index < res.data.length; index++) {
-        const element = res.data[index]
-        if (res.data[index].SubCategories.length !== 0) {
-          for (
-            let jindex = 0;
-            jindex < res.data[index].SubCategories.length;
-            jindex++
-          ) {
-            const subelement = res.data[index].SubCategories[jindex]
-
-            this.state.Categories.push(subelement)
-          }
-        }
-        this.state.Categories.push(element)
-        this.state.parrentCategories.push(element)
-      }
       this.setState({
+        items: res.data,
         isLoading: false
       })
     })
   }
   onView (item) {
-    if (this.state.visibility) {
-      this.setState({
-        visibility: !this.state.visibility,
-        currentItem: {},
-        ParrentId: ''
-      })
-    } else {
-      this.setState({
-        visibility: !this.state.visibility,
-        currentItem: item,
-        ParrentId: item.Id
-      })
-    }
+    this.setState({
+      visibility: !this.state.visibility,
+      currentItem: item,
+      currName: item.Name
+    })
   }
   handleChange = (e, { name, value }) => this.setState({ [name]: value })
   handleSubmit = () => {
     const data = {
-      Name: this.state.Name,
-      ParrentId: this.state.ParrentId
+      Name: this.state.Name
     }
     console.log(data)
     axios({
       method: 'post',
-      url: '/api/category-management',
+      url: '/api/tag-management',
       headers: { 'content-type': 'application/json' },
       data: JSON.stringify(data)
     }).then(res => {
       console.log(res)
       axios({
         method: 'GET',
-        url: '/api/category-management'
+        url: '/api/tag-management'
       }).then(res => {
         console.log(res)
         console.log(res.data)
-        for (let index = 0; index < res.data.length; index++) {
-          const element = res.data[index]
-          if (res.data[index].SubCategories.length !== 0) {
-            for (
-              let jindex = 0;
-              jindex < res.data[index].SubCategories.length;
-              jindex++
-            ) {
-              const subelement = res.data[index].SubCategories[jindex]
-
-              this.state.Categories.push(subelement)
-            }
-          }
-          this.state.Categories.push(element)
-          this.state.parrentCategories.push(element)
-        }
         this.setState({
-          isLoading: false
+          isLoading: false,
+          items: res.data
         })
-
-        toast.success('add new category successfully')
+        toast.success('add new tag successfully')
       })
     })
   }
@@ -130,13 +88,14 @@ class Categories extends React.Component {
     const data = {
       Id: this.state.currentItem.Id,
       Name:
-        this.state.Name === '' ? this.state.currentItem.Name : this.state.Name,
-      ParentId: this.state.currentItem.ParrentId
+        this.state.Name === ''
+          ? this.state.currentItem.Name
+          : this.state.currName
     }
 
     axios({
       method: 'put',
-      url: '/api/category-management',
+      url: '/api/tag-management',
       headers: { 'content-type': 'application/json' },
       data: JSON.stringify(data)
     }).then(res => {
@@ -146,7 +105,7 @@ class Categories extends React.Component {
       })
       axios({
         method: 'GET',
-        url: '/api/category-management'
+        url: '/api/tag-management'
       }).then(res => {
         console.log(res)
         console.log(res.data)
@@ -154,7 +113,7 @@ class Categories extends React.Component {
           isLoading: false,
           Categories: res.data
         })
-        toast.success('update category successfully')
+        toast.success('update tag successfully')
       })
     })
   }
@@ -203,10 +162,10 @@ class Categories extends React.Component {
                   <Form.Input
                     fluid
                     label='Name'
-                    name='Name'
+                    name='currName'
                     placeholder='Name'
                     disabled={!this.state.edit}
-                    value={this.state.currentItem.Name}
+                    value={this.state.currName}
                     onChange={this.handleChange}
                   />
                 </Segment>
@@ -214,7 +173,7 @@ class Categories extends React.Component {
                   <Form onSubmit={this.handleSubmit}>
                     <Form.Input
                       fluid
-                      label='Name'
+                      label='sub category name'
                       name='Name'
                       placeholder='Name'
                       onChange={this.handleChange}
@@ -230,7 +189,7 @@ class Categories extends React.Component {
 
       return (
         <div>
-          <h2 className='page-header'>Categories</h2>
+          <h2 className='page-header'>Tags</h2>
           <Modal
             visible={this.state.visibility}
             width='1200'
@@ -292,10 +251,7 @@ class Categories extends React.Component {
             <div className='col-12'>
               <div className='card'>
                 <div className='card__body'>
-                  <Table
-                    dataSource={this.state.Categories}
-                    columns={tableColumns}
-                  />
+                  <Table dataSource={this.state.items} columns={tableColumns} />
                 </div>
               </div>
             </div>

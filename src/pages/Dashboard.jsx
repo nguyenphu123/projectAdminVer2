@@ -47,24 +47,6 @@ function Dashboard () {
       console.log(res.data)
       setOrders(res.data)
     })
-    axios({
-      method: 'GET',
-      url: '/api/ship-management'
-    }).then(res => {
-      console.log(res)
-      console.log(res.data)
-      setShippingOrders(res.data)
-    })
-  }, [])
-  useEffect(() => {
-    axios({
-      method: 'GET',
-      url: '/api/ship-management'
-    }).then(res => {
-      console.log(res)
-      console.log(res.data)
-      setShippingOrders(res.data)
-    })
   }, [])
 
   useEffect(() => {
@@ -74,29 +56,6 @@ function Dashboard () {
     setOrders(orders => orders)
   }, [setOrders])
 
-  const onUpdate = (Id, OrderId) => {
-    const ship = {
-      Id: Id,
-      OrderId: OrderId,
-      CompanyName: 'FPT',
-      ShipStatus: 'Completed'
-    }
-    axios({
-      method: 'put',
-      url: '/api/ship-management',
-      data: ship
-    }).then(res => {
-      console.log(res)
-      axios({
-        method: 'GET',
-        url: '/api/ship-management'
-      }).then(res => {
-        console.log(res)
-        console.log(res.data)
-        setShippingOrders(res.data)
-      })
-    })
-  }
   const tableColumns = [
     {
       title: 'Id',
@@ -104,40 +63,40 @@ function Dashboard () {
       key: 'Id'
     },
     {
-      title: 'OrderId',
-      dataIndex: 'OrderId',
+      title: 'Ship Id',
+      render: (text, record) => <>{record.Ship[0].Id}</>,
       key: 'OrderId'
     },
     {
       title: 'Paid status',
-      render: (text, record) =>
-        record.Status === 'Pending' ? (
+      render: (text, record) => renderSwitch(record.Ship[0].ShipStatus),
+      key: 'Paid status'
+    }
+  ]
+  const renderSwitch = param => {
+    switch (param) {
+      case 'Pending':
+        return (
           <Header as='h4' color='green'>
             Pending
           </Header>
-        ) : (
+        )
+      case 'Completed':
+        return (
           <Header as='h4' color='red'>
-            Complete
+            Completed
           </Header>
-        ),
-
-      key: 'Paid status'
-    },
-
-    {
-      title: 'Action',
-      key: 'action',
-      render: (text, record) => (
-        <Button
-          type='primary'
-          onClick={() => onUpdate(record.Id, record.OrderId)}
-        >
-          Action
-        </Button>
-      )
+        )
+      case 'Cancel':
+        return (
+          <Header as='h4' color='grey'>
+            Cancel
+          </Header>
+        )
+      default:
+        return 'foo'
     }
-  ]
-
+  }
   return (
     <div>
       <h2 className='page-header'>Dashboard</h2>
@@ -177,7 +136,7 @@ function Dashboard () {
               <h3>Shipping orders</h3>
             </div>
             <div className='card__body'>
-              <Table dataSource={shippingOrders} columns={tableColumns} />
+              <Table dataSource={orders} columns={tableColumns} />
             </div>
           </div>
         </div>
