@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 import Modal from 'react-awesome-modal'
 import NumberFormat from 'react-number-format'
-import MyTable from '../components/table/Table'
+
 import {
   Divider,
   Grid,

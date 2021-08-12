@@ -8,6 +8,9 @@ import Products from '../pages/Products'
 import Categories from '../pages/Categories'
 import Orders from '../pages/Orders'
 import Login from '../pages/Login'
+import Color from '../pages/Color'
+import Size from '../pages/Size'
+import Tag from '../pages/Tag'
 
 const Routes = () => {
   return (
@@ -20,6 +23,10 @@ const Routes = () => {
       <Route path='/orders' component={Orders} />
 
       <Route path='/categories' component={Categories} />
+      <Route path='/colors' component={Color} />
+      <Route path='/sizes' component={Size} />
+
+      <Route path='/tags' component={Tag} />
     </Switch>
   )
 }

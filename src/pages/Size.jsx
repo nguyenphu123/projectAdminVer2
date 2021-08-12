@@ -3,7 +3,7 @@ import axios from 'axios'
 import Modal from 'react-awesome-modal'
 import ImageUploading from 'react-images-uploading'
 
-import MyTable from '../components/table/Table'
+
 import {
   Divider,
   Grid,
@@ -21,7 +21,6 @@ import { RMIUploader } from 'react-multiple-image-uploader'
 import { ToastContainer, toast } from 'react-toastify'
 import Table from 'antd/lib/table'
 
-import customerList from '../assets/JsonData/customers-list.json'
 
 class Categories extends React.Component {
   constructor () {

@@ -13,7 +13,7 @@ import MyTable from '../components/table/Table'
 
 import Badge from '../components/badge/Badge'
 
-import statusCards from '../assets/JsonData/status-card-data.json'
+
 import {
   Divider,
   Grid,

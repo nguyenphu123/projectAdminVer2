@@ -24,5 +24,20 @@
     "display_name": "categories",
     "route": "/categories",
     "icon": "bx bx-list-ol"
+  },
+  {
+    "display_name": "Colors",
+    "route": "/colors",
+    "icon": "bx bx-list-ol"
+  },
+  {
+    "display_name": "Sizes",
+    "route": "/sizes",
+    "icon": "bx bx-list-ol"
+  },
+  {
+    "display_name": "Tags",
+    "route": "/tags",
+    "icon": "bx bx-list-ol"
   }
 ]

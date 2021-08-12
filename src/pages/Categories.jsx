@@ -84,54 +84,103 @@ class Categories extends React.Component {
   }
   handleChange = (e, { name, value }) => this.setState({ [name]: value })
   handleSubmit = () => {
-    const data = {
-      Name: this.state.Name,
-      ParrentId: this.state.ParrentId
-    }
-    console.log(data)
-    axios({
-      method: 'post',
-      url: '/api/category-management',
-      headers: { 'content-type': 'application/json' },
-      data: JSON.stringify(data)
-    }).then(res => {
-      console.log(res)
+    let check_index = this.state.Categories.findIndex(
+      item => item.Name === this.state.Name
+    )
+    if (check_index !== -1) {
+      toast.warn('add new category failed, duplicate name')
+    } else {
+      const data = {
+        Name: this.state.Name,
+        ParrentId: this.state.ParrentId
+      }
+      console.log(data)
       axios({
-        method: 'GET',
-        url: '/api/category-management'
+        method: 'post',
+        url: '/api/category-management',
+        headers: { 'content-type': 'application/json' },
+        data: JSON.stringify(data)
       }).then(res => {
         console.log(res)
-        console.log(res.data)
-        for (let index = 0; index < res.data.length; index++) {
-          const element = res.data[index]
-          if (res.data[index].SubCategories.length !== 0) {
-            for (
-              let jindex = 0;
-              jindex < res.data[index].SubCategories.length;
-              jindex++
-            ) {
-              const subelement = res.data[index].SubCategories[jindex]
+        axios({
+          method: 'GET',
+          url: '/api/category-management'
+        }).then(res => {
+          console.log(res)
+          console.log(res.data)
+          for (let index = 0; index < res.data.length; index++) {
+            const element = res.data[index]
+            if (res.data[index].SubCategories.length !== 0) {
+              for (
+                let jindex = 0;
+                jindex < res.data[index].SubCategories.length;
+                jindex++
+              ) {
+                const subelement = res.data[index].SubCategories[jindex]
 
-              this.state.Categories.push(subelement)
+                this.state.Categories.push(subelement)
+              }
             }
+            this.state.Categories.push(element)
+            this.state.parrentCategories.push(element)
           }
-          this.state.Categories.push(element)
-          this.state.parrentCategories.push(element)
-        }
-        this.setState({
-          isLoading: false
-        })
+          this.setState({
+            isLoading: false
+          })
 
-        toast.success('add new category successfully')
+          toast.success('add new category successfully')
+        })
       })
-    })
+    }
   }
   onSubmitChange = () => {
+    let check_index = this.state.Categories.findIndex(
+      item => item.Name === this.state.Name
+    )
+    if (check_index !== -1) {
+      toast.warn('update category failed, duplicate name')
+    } else {
+      const data = {
+        Id: this.state.currentItem.Id,
+        Name:
+          this.state.newName === ''
+            ? this.state.currentItem.Name
+            : this.state.newName,
+        ParentId: this.state.currentItem.ParrentId,
+        Status: true
+      }
+
+      axios({
+        method: 'put',
+        url: '/api/category-management',
+        headers: { 'content-type': 'application/json' },
+        data: JSON.stringify(data)
+      }).then(res => {
+        console.log(res)
+        this.setState({
+          Name: ''
+        })
+        axios({
+          method: 'GET',
+          url: '/api/category-management'
+        }).then(res => {
+          console.log(res)
+          console.log(res.data)
+          this.setState({
+            isLoading: false,
+            Categories: res.data
+          })
+          toast.success('update category successfully')
+        })
+      })
+    }
+  }
+  onSubmitDisable = () => {
     const data = {
       Id: this.state.currentItem.Id,
-      Name:
-        this.state.Name === '' ? this.state.currentItem.Name : this.state.Name,
-      ParentId: this.state.currentItem.ParrentId
+      Name: this.state.currentItem.Name,
+      ParentId: this.state.currentItem.ParrentId,
+      Status: false
     }
 
     axios({
@@ -151,14 +200,57 @@ class Categories extends React.Component {
         console.log(res)
         console.log(res.data)
         this.setState({
-          isLoading: false,
           Categories: res.data
         })
+        axios({
+          method: 'GET',
+          url: '/api/category-management/' + this.state.currentItem.Id
+        }).then(res => {
+          console.log(res)
+          console.log(res.data)
+          array.forEach(item => {
+            let data = {
+              Id: item.Id,
+              ModifiedProduct: {
+                Name: item.Name,
+
+                Price: parseFloat(item.Price),
+
+                CurrentPrice: parseFloat(item.CurrentPrice),
+
+                Code: item.Code,
+                CategoryId: item.CategoryId,
+                Description: item.Description,
+
+                ImageStorages: item.ImageStorages,
+                Tags: item.Tags,
+
+                Status: false,
+                DateTime: new Date()
+                  .toISOString()
+                  .slice(0, 19)
+                  .replace('T', ' '),
+                Star: item.Star === 'NaN' ? 0 : item.Star
+              }
+            }
+            axios({
+              method: 'put',
+              url: '/api/product-management',
+              headers: { 'content-type': 'application/json' },
+              data: JSON.stringify(data)
+            }).then(res => {
+              console.log(res)
+            })
+          })
+          this.setState({
+            isLoading: false
+          })
+        })
+
         toast.success('update category successfully')
       })
     })
   }
-
   render () {
     const tableColumns = [
       {
@@ -203,7 +295,7 @@ class Categories extends React.Component {
                   <Form.Input
                     fluid
                     label='Name'
-                    name='Name'
+                    name='newName'
                     placeholder='Name'
                     disabled={!this.state.edit}
                     value={this.state.currentItem.Name}

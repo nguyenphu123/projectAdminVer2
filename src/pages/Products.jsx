@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import axios from 'axios'
 import Modal from 'react-awesome-modal'
-import MyTable from '../components/table/Table'
+
 import 'semantic-ui-css/semantic.min.css'
 import {
   Divider,
@@ -27,7 +27,7 @@ import { notification, Space } from 'antd'
 import { RMIUploader } from 'react-multiple-image-uploader'
 import ImageUploading from 'react-images-uploading'
 import './Product.css'
-import { useFaker } from 'react-fakers'
+
 import { Input } from 'antd'
 
 const Search = Input.Search
@@ -334,38 +334,56 @@ class Products extends React.Component {
     this.setState({
       LoadingOnProduct: true
     })
-
-    var Await = true
-    const imageUrls = []
-    for (let index = 0; index < this.state.ImageList.length; index++) {
-      const element = this.state.ImageList[index].data_url
-
-      const data = new FormData()
-      data.append('file', element)
-      data.append('upload_preset', 'ml_default')
-      data.append('cloud_name', 'shopproject')
-      fetch('  	https://api.cloudinary.com/v1_1/shopproject/image/upload', {
-        method: 'post',
-        body: data
+    let check_index = this.state.product.findIndex(
+      item => item.Name === this.state.Name
+    )
+    if (check_index !== -1) {
+      notification['fail']({
+        message: 'add product',
+        description: 'duplicate name',
+        duration: 10
       })
-        .then(resp => resp.json())
-        .then(response => {
-          const imageURL = {
-            ImageUrl: response.url,
-            Alt: 'image'
-          }
-          imageUrls.push(imageURL)
-
-          if (index === this.state.ImageList.length) {
-            Await = false
-          }
+    } else {
+      if (this.state.CurrentPrice > this.state.Price) {
+        notification['fail']({
+          message: 'add product',
+          description: 'current price cannot be larger price',
+          duration: 10
         })
-        .catch(err => console.log(err))
-    }
+      } else {
+        var Await = true
+        const imageUrls = []
+        for (let index = 0; index < this.state.ImageList.length; index++) {
+          const element = this.state.ImageList[index].data_url
 
-    setTimeout(() => {
-      this.onSubmitToDb(imageUrls)
-    }, 10000)
+          const data = new FormData()
+          data.append('file', element)
+          data.append('upload_preset', 'ml_default')
+          data.append('cloud_name', 'shopproject')
+          fetch('  	https://api.cloudinary.com/v1_1/shopproject/image/upload', {
+            method: 'post',
+            body: data
+          })
+            .then(resp => resp.json())
+            .then(response => {
+              const imageURL = {
+                ImageUrl: response.url,
+                Alt: 'image'
+              }
+              imageUrls.push(imageURL)
+
+              if (index === this.state.ImageList.length) {
+                Await = false
+              }
+            })
+            .catch(err => console.log(err))
+        }
+
+        setTimeout(() => {
+          this.onSubmitToDb(imageUrls)
+        }, 10000)
+      }
+    }
   }
   onSubmitToDb = imageUrls => {
     const data = {
@@ -405,40 +423,66 @@ class Products extends React.Component {
     this.setState({
       LoadingOnProduct: true
     })
-    if (this.state.updateImages.length !== 0) {
-      var Await = true
-      const imageUrls = []
-      for (let index = 0; index < this.state.updateImages.length; index++) {
-        const element = this.state.updateImages[index].data_url
-
-        const data = new FormData()
-        data.append('file', element)
-        data.append('upload_preset', 'ml_default')
-        data.append('cloud_name', 'shopproject')
-        fetch('  	https://api.cloudinary.com/v1_1/shopproject/image/upload', {
-          method: 'post',
-          body: data
-        })
-          .then(resp => resp.json())
-          .then(response => {
-            const imageURL = {
-              ImageUrl: response.url,
-              Alt: 'image'
-            }
-            imageUrls.push(imageURL)
-
-            if (index === this.state.ImageList.length) {
-              Await = false
-            }
-          })
-          .catch(err => console.log(err))
-      }
-
-      setTimeout(() => {
-        this.onSubmitChange(this.state.currentImage.concat(imageUrls))
-      }, 10000)
+    let check_index = this.state.product.findIndex(
+      item => item.Name === this.state.updateName
+    )
+    if (check_index !== -1) {
+      notification['fail']({
+        message: 'add product',
+        description: 'duplicate name',
+        duration: 10
+      })
     } else {
-      this.onSubmitChange(this.state.currentImage)
+      if (
+        this.state.updateCurPrice > this.state.updatePrice ||
+        this.state.updateCurPrice > this.state.currentItem.Price ||
+        this.state.currentItem.CurrentPrice > this.state.updatePrice
+      ) {
+        notification['fail']({
+          message: 'add product',
+          description: 'current price cannot be larger price',
+          duration: 10
+        })
+      } else {
+        if (this.state.updateImages.length !== 0) {
+          var Await = true
+          const imageUrls = []
+          for (let index = 0; index < this.state.updateImages.length; index++) {
+            const element = this.state.updateImages[index].data_url
+
+            const data = new FormData()
+            data.append('file', element)
+            data.append('upload_preset', 'ml_default')
+            data.append('cloud_name', 'shopproject')
+            fetch(
+              '  	https://api.cloudinary.com/v1_1/shopproject/image/upload',
+              {
+                method: 'post',
+                body: data
+              }
+            )
+              .then(resp => resp.json())
+              .then(response => {
+                const imageURL = {
+                  ImageUrl: response.url,
+                  Alt: 'image'
+                }
+                imageUrls.push(imageURL)
+
+                if (index === this.state.ImageList.length) {
+                  Await = false
+                }
+              })
+              .catch(err => console.log(err))
+          }
+
+          setTimeout(() => {
+            this.onSubmitChange(this.state.currentImage.concat(imageUrls))
+          }, 10000)
+        } else {
+          this.onSubmitChange(this.state.currentImage)
+        }
+      }
     }
   }
   onSubmitChange = imageUrls => {

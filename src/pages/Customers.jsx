@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 import Modal from 'react-awesome-modal'
 
-import MyTable from '../components/table/Table'
 import 'semantic-ui-css/semantic.min.css'
 import {
   Divider,
@@ -16,7 +15,6 @@ import {
   Button
 } from 'semantic-ui-react'
 
-import customerList from '../assets/JsonData/customers-list.json'
 import Table from 'antd/lib/table'
 import 'antd/lib/table/style/css'
 import { Input } from 'antd'
