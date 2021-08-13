@@ -135,7 +135,7 @@ class Categories extends React.Component {
   }
   onSubmitChange = () => {
     let check_index = this.state.Categories.findIndex(
-      item => item.Name === this.state.Name
+      item => item.Name === this.state.newName
     )
     if (check_index !== -1) {
       toast.warn('update category failed, duplicate name')
@@ -175,14 +175,108 @@ class Categories extends React.Component {
       })
     }
   }
-  onSubmitDisable = () => {
+  onSubmitDisable = category => {
+    this.setState({
+      isLoading: true
+    })
+
     const data = {
-      Id: this.state.currentItem.Id,
-      Name: this.state.currentItem.Name,
-      ParentId: this.state.currentItem.ParrentId,
+      Id: category.Id,
+      Name: category.Name,
+      ParentId: category.ParrentId,
       Status: false
     }
+    let result = this.state.Categories.filter(
+      item => item.ParentId === category.Id
+    )
+    let awaitResult = false
+    if (result.length === 0) {
+      awaitResult = true
+    } else {
+      for (let index = 0; index < result.length; index++) {
+        const element = result[index]
+        disableSubCategory(element)
+        if ((index = result.length - 1)) {
+          awaitResult = true
+        }
+      }
+    }
 
+    if (awaitResult) {
+      axios({
+        method: 'put',
+        url: '/api/category-management',
+        headers: { 'content-type': 'application/json' },
+        data: JSON.stringify(data)
+      }).then(res => {
+        console.log(res)
+
+        axios({
+          method: 'GET',
+          url: '/api/category-management'
+        }).then(res => {
+          console.log(res)
+          console.log(res.data)
+          this.setState({
+            Categories: res.data
+          })
+          axios({
+            method: 'GET',
+            url: '/api/category-management/' + category.Id
+          }).then(res => {
+            console.log(res)
+            console.log(res.data)
+            array.forEach(item => {
+              let data = {
+                Id: item.Id,
+                ModifiedProduct: {
+                  Name: item.Name,
+
+                  Price: parseFloat(item.Price),
+
+                  CurrentPrice: parseFloat(item.CurrentPrice),
+
+                  Code: item.Code,
+                  CategoryId: item.CategoryId,
+                  Description: item.Description,
+
+                  ImageStorages: item.ImageStorages,
+                  Tags: item.Tags,
+
+                  Status: false,
+                  DateTime: new Date()
+                    .toISOString()
+                    .slice(0, 19)
+                    .replace('T', ' '),
+                  Star: item.Star === 'NaN' ? 0 : item.Star
+                }
+              }
+              axios({
+                method: 'put',
+                url: '/api/product-management',
+                headers: { 'content-type': 'application/json' },
+                data: JSON.stringify(data)
+              }).then(res => {
+                console.log(res)
+              })
+            })
+            this.setState({
+              isLoading: false
+            })
+          })
+
+          toast.success('disable category successfully')
+        })
+      })
+    }
+  }
+  disableSubCategory = element => {
+    const data = {
+      Id: element.Id,
+      Name: element.Name,
+      ParentId: element.ParrentId,
+      Status: false
+    }
     axios({
       method: 'put',
       url: '/api/category-management',
@@ -190,67 +284,206 @@ class Categories extends React.Component {
       data: JSON.stringify(data)
     }).then(res => {
       console.log(res)
-      this.setState({
-        Name: ''
-      })
+      console.log(res.data)
+    })
+  }
+  onSubmitActive = category => {
+    this.setState({
+      isLoading: true
+    })
+
+    let check_index = this.state.Categories.findIndex(
+      item => item.ParentId === category.Id
+    )
+    if (check_index !== -1) {
+      if (this.state.Categories[check_index].Status) {
+        const data = {
+          Id: category.Id,
+          Name: category.Name,
+          ParentId: category.ParrentId,
+          Status: true
+        }
+        let result = this.state.Categories.filter(
+          item => item.ParentId === category.Id
+        )
+        let awaitResult = false
+        if (result.length === 0) {
+          awaitResult = true
+        } else {
+          for (let index = 0; index < result.length; index++) {
+            const element = result[index]
+            activeSubCategory(element)
+            if ((index = result.length - 1)) {
+              awaitResult = true
+            }
+          }
+        }
+        if (awaitResult) {
+          axios({
+            method: 'put',
+            url: '/api/category-management',
+            headers: { 'content-type': 'application/json' },
+            data: JSON.stringify(data)
+          }).then(res => {
+            console.log(res)
+
+            axios({
+              method: 'GET',
+              url: '/api/category-management'
+            }).then(res => {
+              console.log(res)
+              console.log(res.data)
+              this.setState({
+                Categories: res.data
+              })
+              axios({
+                method: 'GET',
+                url: '/api/category-management/' + category.Id
+              }).then(res => {
+                console.log(res)
+                console.log(res.data)
+                array.forEach(item => {
+                  let data = {
+                    Id: item.Id,
+                    ModifiedProduct: {
+                      Name: item.Name,
+
+                      Price: parseFloat(item.Price),
+
+                      CurrentPrice: parseFloat(item.CurrentPrice),
+
+                      Code: item.Code,
+                      CategoryId: item.CategoryId,
+                      Description: item.Description,
+
+                      ImageStorages: item.ImageStorages,
+                      Tags: item.Tags,
+
+                      Status: true,
+                      DateTime: new Date()
+                        .toISOString()
+                        .slice(0, 19)
+                        .replace('T', ' '),
+                      Star: item.Star === 'NaN' ? 0 : item.Star
+                    }
+                  }
+                  axios({
+                    method: 'put',
+                    url: '/api/product-management',
+                    headers: { 'content-type': 'application/json' },
+                    data: JSON.stringify(data)
+                  }).then(res => {
+                    console.log(res)
+                  })
+                })
+                this.setState({
+                  isLoading: false
+                })
+              })
+
+              toast.success('update category successfully')
+            })
+          })
+        }
+      } else {
+        this.setState({
+          isLoading: false
+        })
+
+        toast.warn('update category successfully')
+      }
+    } else {
+      const data = {
+        Id: category.Id,
+        Name: category.Name,
+        ParentId: category.ParrentId,
+        Status: true
+      }
       axios({
-        method: 'GET',
-        url: '/api/category-management'
+        method: 'put',
+        url: '/api/category-management',
+        headers: { 'content-type': 'application/json' },
+        data: JSON.stringify(data)
       }).then(res => {
         console.log(res)
-        console.log(res.data)
-        this.setState({
-          Categories: res.data
-        })
+
         axios({
           method: 'GET',
-          url: '/api/category-management/' + this.state.currentItem.Id
+          url: '/api/category-management'
         }).then(res => {
           console.log(res)
           console.log(res.data)
-          array.forEach(item => {
-            let data = {
-              Id: item.Id,
-              ModifiedProduct: {
-                Name: item.Name,
+          this.setState({
+            Categories: res.data
+          })
+          axios({
+            method: 'GET',
+            url: '/api/category-management/' + category.Id
+          }).then(res => {
+            console.log(res)
+            console.log(res.data)
+            array.forEach(item => {
+              let data = {
+                Id: item.Id,
+                ModifiedProduct: {
+                  Name: item.Name,
 
-                Price: parseFloat(item.Price),
+                  Price: parseFloat(item.Price),
 
-                CurrentPrice: parseFloat(item.CurrentPrice),
+                  CurrentPrice: parseFloat(item.CurrentPrice),
 
-                Code: item.Code,
-                CategoryId: item.CategoryId,
-                Description: item.Description,
+                  Code: item.Code,
+                  CategoryId: item.CategoryId,
+                  Description: item.Description,
 
-                ImageStorages: item.ImageStorages,
-                Tags: item.Tags,
+                  ImageStorages: item.ImageStorages,
+                  Tags: item.Tags,
 
-                Status: false,
-                DateTime: new Date()
-                  .toISOString()
-                  .slice(0, 19)
-                  .replace('T', ' '),
-                Star: item.Star === 'NaN' ? 0 : item.Star
+                  Status: true,
+                  DateTime: new Date()
+                    .toISOString()
+                    .slice(0, 19)
+                    .replace('T', ' '),
+                  Star: item.Star === 'NaN' ? 0 : item.Star
+                }
               }
-            }
-            axios({
-              method: 'put',
-              url: '/api/product-management',
-              headers: { 'content-type': 'application/json' },
-              data: JSON.stringify(data)
-            }).then(res => {
-              console.log(res)
+              axios({
+                method: 'put',
+                url: '/api/product-management',
+                headers: { 'content-type': 'application/json' },
+                data: JSON.stringify(data)
+              }).then(res => {
+                console.log(res)
+              })
+            })
+            this.setState({
+              isLoading: false
             })
           })
-          this.setState({
-            isLoading: false
-          })
-        })
 
-        toast.success('update category successfully')
+          toast.success('update category successfully')
+        })
       })
+    }
+  }
+  activeSubCategory = element => {
+    const data = {
+      Id: element.Id,
+      Name: element.Name,
+      ParentId: element.ParrentId,
+      Status: true
+    }
+    axios({
+      method: 'put',
+      url: '/api/category-management',
+      headers: { 'content-type': 'application/json' },
+      data: JSON.stringify(data)
+    }).then(res => {
+      console.log(res)
+      console.log(res.data)
     })
   }
+
   render () {
     const tableColumns = [
       {
@@ -264,13 +497,27 @@ class Categories extends React.Component {
         key: 'Name'
       },
       {
-        title: 'Action',
+        title: 'View detail',
         key: 'action',
         render: (text, record) => (
           <Button type='primary' onClick={() => this.onView(record)}>
             View Detail
           </Button>
         )
+      },
+      {
+        title: 'Action',
+        key: 'action',
+        render: (text, record) =>
+          record.Status ? (
+            <Button type='primary' onClick={() => this.onSubmitDisable(record)}>
+              Disable
+            </Button>
+          ) : (
+            <Button type='primary' onClick={() => this.onSubmitActive(record)}>
+              Active
+            </Button>
+          )
       }
     ]
 

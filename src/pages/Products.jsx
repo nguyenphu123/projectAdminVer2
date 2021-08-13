@@ -70,7 +70,8 @@ class Products extends React.Component {
       updateCurPrice: 0,
       updateDes: '',
       updatePrice: 0,
-      currentImage: []
+      currentImage: [],
+      categoryList: []
     }
     this.onView = this.onView.bind(this)
     this.onViewAddProduct = this.onViewAddProduct.bind(this)
@@ -112,6 +113,7 @@ class Products extends React.Component {
               }
 
               this.state.categories.push(element)
+              this.state.categoryList.push(res.data[index])
 
               //   this.setState({
               //     categories: this.state.categories.push(element)
@@ -119,6 +121,7 @@ class Products extends React.Component {
             }
           }
           this.state.categories.push(element)
+          this.state.categoryList.push(res.data[index])
 
           //   this.setState({
           //     categories: this.state.categories.push(element)
@@ -552,33 +555,33 @@ class Products extends React.Component {
       })
     })
   }
-  onSubmitDisabled = item => {
+  onSubmitDisabled = product => {
     this.setState({
       LoadingOnProduct: true
     })
 
     const data = {
-      Id: item.Id,
+      Id: product.Id,
       ModifiedProduct: {
-        Name: item.Name,
+        Name: product.Name,
 
-        Price: parseFloat(item.Price),
+        Price: parseFloat(product.Price),
 
-        CurrentPrice: parseFloat(item.CurrentPrice),
+        CurrentPrice: parseFloat(product.CurrentPrice),
 
-        Code: item.Code,
-        CategoryId: item.CategoryId,
-        Description: item.Description,
+        Code: product.Code,
+        CategoryId: product.CategoryId,
+        Description: product.Description,
 
-        ImageStorages: item.ImageStorages,
-        Tags: item.Tags,
+        ImageStorages: product.ImageStorages,
+        Tags: product.Tags,
 
         Status: false,
         DateTime: new Date()
           .toISOString()
           .slice(0, 19)
           .replace('T', ' '),
-        Star: item.Star === 'NaN' ? 0 : item.Star
+        Star: product.Star === 'NaN' ? 0 : product.Star
       }
     }
     axios({
@@ -606,61 +609,75 @@ class Products extends React.Component {
       })
     })
   }
-  onSubmitActive = item => {
+  onSubmitActive = product => {
     this.setState({
       LoadingOnProduct: true
     })
+    let check_index = this.state.categoryList.findIndex(
+      item => item.Id === product.CategoryId
+    )
+    if (check_index !== -1) {
+      if (this.state.categoryList[check_index].Status) {
+        const data = {
+          Id: product.Id,
+          ModifiedProduct: {
+            Name: product.Name,
 
-    const data = {
-      Id: item.Id,
-      ModifiedProduct: {
-        Name: item.Name,
+            Price: parseFloat(product.Price),
 
-        Price: parseFloat(item.Price),
+            CurrentPrice: parseFloat(product.CurrentPrice),
 
-        CurrentPrice: parseFloat(item.CurrentPrice),
+            Code: product.Code,
+            CategoryId: product.CategoryId,
+            Description: product.Description,
 
-        Code: item.Code,
-        CategoryId: item.CategoryId,
-        Description: item.Description,
+            ImageStorages: product.ImageStorages,
+            Tags: product.Tags,
 
-        ImageStorages: item.ImageStorages,
-        Tags: item.Tags,
-
-        Status: true,
-        DateTime: new Date()
-          .toISOString()
-          .slice(0, 19)
-          .replace('T', ' '),
-        Star: item.Star === 'NaN' ? 0 : item.Star
-      }
-    }
-    axios({
-      method: 'put',
-      url: '/api/product-management',
-      headers: { 'content-type': 'application/json' },
-      data: JSON.stringify(data)
-    }).then(res => {
-      console.log(res)
-      axios({
-        method: 'GET',
-        url: '/api/product-management?sort=up&pageIndex=1&pageSize=1000'
-      }).then(res => {
-        console.log(res)
-        console.log(res.data)
-        this.setState({
-          LoadingOnProduct: false,
-          product: res.data
+            Status: true,
+            DateTime: new Date()
+              .toISOString()
+              .slice(0, 19)
+              .replace('T', ' '),
+            Star: product.Star === 'NaN' ? 0 : product.Star
+          }
+        }
+        axios({
+          method: 'put',
+          url: '/api/product-management',
+          headers: { 'content-type': 'application/json' },
+          data: JSON.stringify(data)
+        }).then(res => {
+          console.log(res)
+          axios({
+            method: 'GET',
+            url: '/api/product-management?sort=up&pageIndex=1&pageSize=1000'
+          }).then(res => {
+            console.log(res)
+            console.log(res.data)
+            this.setState({
+              LoadingOnProduct: false,
+              product: res.data
+            })
+            notification['success']({
+              message: 'update product',
+              description: 'update successfully.',
+              duration: 10
+            })
+          })
         })
-        notification['success']({
+      } else {
+        this.setState({
+          LoadingOnProduct: false
+        })
+        notification['fail']({
           message: 'update product',
-          description: 'update successfully.',
+          description: 'update fail category is inactive.',
           duration: 10
         })
-      })
-    })
+      }
+    }
   }
-
   handleSearch = searchText => {
     const filteredEvents = this.state.product.filter(({ Name }) => {
       Name = Name.toLowerCase()
