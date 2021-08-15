@@ -9,7 +9,7 @@ import { useSelector } from 'react-redux'
 
 import StatusCard from '../components/status-card/StatusCard'
 
-import MyTable from '../components/table/Table'
+
 
 import Badge from '../components/badge/Badge'
 

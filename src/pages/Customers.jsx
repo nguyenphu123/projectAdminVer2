@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 import Modal from 'react-awesome-modal'
+import { ToastContainer, toast } from 'react-toastify'
 
 import 'semantic-ui-css/semantic.min.css'
 import {
@@ -80,7 +81,7 @@ class Customers extends React.Component {
       data: authData
     })
       .then(res => {
-        toast.success('Change information successful')
+        toast.success('Change status successful')
       })
       .catch(function (error) {
         console.log('Show error notification!')
@@ -219,7 +220,6 @@ class Customers extends React.Component {
       return (
         <div>
           <h2 className='page-header'>customers</h2>
-
           <Modal
             visible={this.state.visibility}
             width='1200'
@@ -275,7 +275,6 @@ class Customers extends React.Component {
               </Grid>
             </div>
           </Modal>
-
           <div className='row'>
             <div className='col-12'>
               <div className='card'>
@@ -291,6 +290,7 @@ class Customers extends React.Component {
               </div>
             </div>
           </div>
+          ;<ToastContainer autoClose={5000} />
         </div>
       )
     }

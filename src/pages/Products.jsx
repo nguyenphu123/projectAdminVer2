@@ -413,7 +413,8 @@ class Products extends React.Component {
 
       this.state.product.push(data)
       this.setState({
-        LoadingOnProduct: false
+        LoadingOnProduct: false,
+        Elements: []
       })
       notification['success']({
         message: 'add product',
