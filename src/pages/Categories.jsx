@@ -37,8 +37,40 @@ class Categories extends React.Component {
       acceptActionProduct: false
     }
     this.onView = this.onView.bind(this)
+    this.reset = this.reset.bind(this)
   }
+  reset () {
+    this.setState({
+      isLoading: true,
+      Categories: [],
+      parrentCategories: []
+    })
 
+    axios({
+      method: 'GET',
+      url: '/api/category-management'
+    }).then(res => {
+      for (let index = 0; index < res.data.length; index++) {
+        const element = res.data[index]
+        if (res.data[index].SubCategories.length !== 0) {
+          for (
+            let jindex = 0;
+            jindex < res.data[index].SubCategories.length;
+            jindex++
+          ) {
+            const subelement = res.data[index].SubCategories[jindex]
+
+            this.state.Categories.push(subelement)
+          }
+        }
+        this.state.Categories.push(element)
+        this.state.parrentCategories.push(element)
+      }
+      this.setState({
+        isLoading: false
+      })
+    })
+  }
   componentWillMount () {
     axios({
       method: 'GET',
@@ -752,6 +784,9 @@ class Categories extends React.Component {
             <div className='col-12'>
               <div className='card'>
                 <div className='card__body'>
+                  <Button type='primary' onClick={() => this.reset()}>
+                    Reset
+                  </Button>
                   <Table
                     dataSource={this.state.Categories}
                     columns={tableColumns}

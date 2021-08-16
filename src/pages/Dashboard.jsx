@@ -9,10 +9,7 @@ import { useSelector } from 'react-redux'
 
 import StatusCard from '../components/status-card/StatusCard'
 
-
-
 import Badge from '../components/badge/Badge'
-
 
 import {
   Divider,
@@ -48,7 +45,16 @@ function Dashboard () {
       setOrders(res.data)
     })
   }, [])
-
+  const reset = () => {
+    axios({
+      method: 'GET',
+      url: '/api/order-management/orders'
+    }).then(res => {
+      console.log(res)
+      console.log(res.data)
+      setOrders(res.data)
+    })
+  }
   useEffect(() => {
     setShippingOrders(shippingOrders => shippingOrders)
   }, [shippingOrders])
@@ -101,6 +107,10 @@ function Dashboard () {
     <div>
       <h2 className='page-header'>Dashboard</h2>
       <div className='row'>
+        <Button type='primary' onClick={() => reset()}>
+          Reset
+        </Button>
+
         <div className='col-6'>
           <div className='row'>
             <div className='col-6'>

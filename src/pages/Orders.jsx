@@ -29,38 +29,55 @@ class Orders extends React.Component {
     this.state = {
       Orders: []
     }
+    this.reset = this.reset.bind(this)
   }
-  onUpdate = item => {
-    const order = {
-      Id: item.Id,
-      UserId: item.UserId,
-      TotalPrice: item.TotalPrice,
-      AddressShipping: item.AddressShipping,
-      Phone: item.Phone,
-      Date: item.Date,
-      Status: true
-      // OrderDetails: item.Orderdetails,
-      // Ship: item.Ship
-    }
+  // onUpdate = item => {
+  //   const order = {
+  //     Id: item.Id,
+  //     UserId: item.UserId,
+  //     TotalPrice: item.TotalPrice,
+  //     AddressShipping: item.AddressShipping,
+  //     Phone: item.Phone,
+  //     Date: item.Date,
+  //     Status: true
+  //     // OrderDetails: item.Orderdetails,
+  //     // Ship: item.Ship
+  //   }
+  //   axios({
+  //     method: 'put',
+  //     url: '/api/order-management/users/orders',
+  //     data: order
+  //   }).then(res => {
+  //     console.log(res)
+  //     axios({
+  //       method: 'GET',
+  //       url: '/api/order-management/orders'
+  //     }).then(res => {
+  //       console.log(res)
+  //       console.log(res.data)
+  //       this.setState({
+  //         Orders: res.data
+  //       })
+  //     })
+  //   })
+  // }
+
+  reset () {
+    this.setState({
+      Orders: []
+    })
+
     axios({
-      method: 'put',
-      url: '/api/order-management/users/orders',
-      data: order
+      method: 'GET',
+      url: '/api/order-management/orders'
     }).then(res => {
       console.log(res)
-      axios({
-        method: 'GET',
-        url: '/api/order-management/orders'
-      }).then(res => {
-        console.log(res)
-        console.log(res.data)
-        this.setState({
-          Orders: res.data
-        })
+      console.log(res.data)
+      this.setState({
+        Orders: res.data
       })
     })
   }
-
   componentWillMount () {
     axios({
       method: 'GET',
@@ -137,7 +154,7 @@ class Orders extends React.Component {
           ),
 
         key: 'Paid status'
-      },
+      }
 
       // {
       //   title: 'Action',
@@ -165,6 +182,9 @@ class Orders extends React.Component {
                     onSearch={this.handleSearch}
                     style={{ width: 200 }}
                   />
+                  <Button type='primary' onClick={() => this.reset()}>
+                    Reset
+                  </Button>
 
                   <Table
                     dataSource={this.state.Orders}

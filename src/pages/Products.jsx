@@ -77,10 +77,132 @@ class Products extends React.Component {
     this.onViewAddProduct = this.onViewAddProduct.bind(this)
     this.onAddElement = this.onAddElement.bind(this)
     this.onAddCurrentElement = this.onAddCurrentElement.bind(this)
+    this.reset = this.reset.bind(this)
 
     // this.handleSubmit = this.handleSubmit.bind(this)
   }
+  reset () {
+    this.setState({
+      isLoading: true,
+      product: [],
+      categories: [],
+      Colors: [],
+      Sizes: [],
+      Elements: [],
+      ImageList: [],
+      Tags: []
+    })
 
+    axios({
+      method: 'GET',
+      url: '/api/product-management?sort=up&pageIndex=1&pageSize=1000'
+    }).then(res => {
+      console.log(res)
+      console.log(res.data)
+      axios({
+        method: 'GET',
+        url: '/api/category-management'
+      }).then(res => {
+        console.log(res)
+        console.log(res.data)
+        for (let index = 0; index < res.data.length; index++) {
+          const element = {
+            key: res.data[index].Id,
+            text: res.data[index].Name,
+            value: res.data[index].Id
+          }
+          if (res.data[index].SubCategories.length !== 0) {
+            for (
+              let jindex = 0;
+              jindex < res.data[index].SubCategories.length;
+              jindex++
+            ) {
+              const element = {
+                key: res.data[index].SubCategories[jindex].Id,
+                text: res.data[index].SubCategories[jindex].Name,
+                value: res.data[index].SubCategories[jindex].Id
+              }
+
+              this.state.categories.push(element)
+              this.state.categoryList.push(res.data[index])
+
+              //   this.setState({
+              //     categories: this.state.categories.push(element)
+              //   })
+            }
+          }
+          this.state.categories.push(element)
+          this.state.categoryList.push(res.data[index])
+
+          //   this.setState({
+          //     categories: this.state.categories.push(element)
+          //   })
+        }
+      })
+      axios({
+        method: 'GET',
+        url: '/api/tag-management'
+      }).then(res => {
+        console.log(res)
+        console.log(res.data)
+        for (let index = 0; index < res.data.length; index++) {
+          const element = {
+            key: res.data[index].Id,
+            text: res.data[index].Name,
+            value: res.data[index].Id
+          }
+          this.state.Tags.push(element)
+
+          //   this.setState({
+          //     categories: this.state.categories.push(element)
+          //   })
+        }
+      })
+      axios({
+        method: 'GET',
+        url: '/api/color-management'
+      }).then(res => {
+        console.log(res)
+        console.log(res.data)
+        for (let index = 0; index < res.data.length; index++) {
+          const element = {
+            key: res.data[index].Id,
+            text: res.data[index].Name,
+            value: res.data[index].Id
+          }
+          this.state.Colors.push(element)
+
+          //   this.setState({
+          //     categories: this.state.categories.push(element)
+          //   })
+        }
+      })
+      axios({
+        method: 'GET',
+        url: '/api/size-management'
+      }).then(res => {
+        console.log(res)
+        console.log(res.data)
+        for (let index = 0; index < res.data.length; index++) {
+          const element = {
+            key: res.data[index].Id,
+            text: res.data[index].Name,
+            value: res.data[index].Id
+          }
+          this.state.Sizes.push(element)
+
+          //   this.setState({
+          //     categories: this.state.categories.push(element)
+          //   })
+        }
+      })
+
+      this.setState({
+        isLoading: false,
+        product: res.data
+      })
+    })
+  }
   componentWillMount () {
     axios({
       method: 'GET',
@@ -1358,6 +1480,9 @@ class Products extends React.Component {
                     onSearch={this.handleSearch}
                     style={{ width: 200 }}
                   />
+                  <Button type='primary' onClick={() => this.reset()}>
+                    Reset
+                  </Button>
 
                   {this.state.LoadingOnProduct ? (
                     <img
