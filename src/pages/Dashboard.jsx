@@ -107,10 +107,6 @@ function Dashboard () {
     <div>
       <h2 className='page-header'>Dashboard</h2>
       <div className='row'>
-        <Button type='primary' onClick={() => reset()}>
-          Reset
-        </Button>
-
         <div className='col-6'>
           <div className='row'>
             <div className='col-6'>
@@ -146,6 +142,10 @@ function Dashboard () {
               <h3>Shipping orders</h3>
             </div>
             <div className='card__body'>
+              <Button type='primary' onClick={() => reset()}>
+                Reset
+              </Button>
+
               <Table dataSource={orders} columns={tableColumns} />
             </div>
           </div>

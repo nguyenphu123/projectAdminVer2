@@ -13,9 +13,9 @@ import Size from '../pages/Size'
 import Tag from '../pages/Tag'
 
 const Routes = () => {
-  return (
-    <Switch>
-      <Route path='/' exact component={Login} />
+  return (<>
+    
+      {/* <Route path='/' exact component={Login} /> */}
 
       <Route path='/dashboard' component={Dashboard} />
       <Route path='/customers' component={Customers} />
@@ -27,7 +27,7 @@ const Routes = () => {
       <Route path='/sizes' component={Size} />
 
       <Route path='/tags' component={Tag} />
-    </Switch>
+   </>
   )
 }
 
