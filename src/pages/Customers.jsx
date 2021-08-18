@@ -157,9 +157,7 @@ class Customers extends React.Component {
           menuItem: { key: 'about', icon: 'info circle', content: 'About' },
           render: () => (
             <Tab.Pane attached={false}>
-              <Header floated='right' as='h6' icon>
-                <Icon name='settings' />
-              </Header>
+              <Header floated='right' as='h6' icon></Header>
 
               <Header as='h4' color='grey'>
                 Basic Information
@@ -210,10 +208,6 @@ class Customers extends React.Component {
               </div>
             </Tab.Pane>
           )
-        },
-        {
-          menuItem: { key: 'timeline', icon: 'eye', content: 'Timeline' },
-          render: () => <Tab.Pane attached={false}>Tab 2 Content</Tab.Pane>
         }
       ]
 
@@ -235,9 +229,7 @@ class Customers extends React.Component {
 
             <div style={{ marginLeft: '10px', marginTop: '10px' }}>
               <Grid>
-                <Grid.Column width={3}>
-                  <Image src='https://react.semantic-ui.com/images/wireframe/image.png' />
-                </Grid.Column>
+                <Grid.Column width={3}></Grid.Column>
                 <Grid.Column width={11}>
                   <Header as='h1'>{this.state.currentItem.Name}</Header>
                   <Header as='h5'>
