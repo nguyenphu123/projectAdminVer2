@@ -111,9 +111,11 @@ class Categories extends React.Component {
         ParrentId: item.Id
       })
     }
+    console.log(this.state.ParrentId)
   }
   handleChange = (e, { name, value }) => this.setState({ [name]: value })
   handleSubmit = () => {
+    console.log('ok')
     this.setState({
       isLoading: true,
       Categories: [],
@@ -128,7 +130,8 @@ class Categories extends React.Component {
     } else {
       const data = {
         Name: this.state.Name,
-        ParrentId: this.state.ParrentId
+        ParentId: '',
+        Status: true
       }
       console.log(data)
       axios({
@@ -169,6 +172,65 @@ class Categories extends React.Component {
       })
     }
   }
+  handleSubmit2 = () => {
+    console.log('ok')
+    this.setState({
+      isLoading: true,
+      Categories: [],
+      parrentCategories: []
+    })
+
+    let check_index = this.state.Categories.findIndex(
+      item => item.Name === this.state.Name
+    )
+    if (check_index !== -1) {
+      toast.warn('add new category failed, duplicate name')
+    } else {
+      const data = {
+        Name: this.state.Name,
+        ParentId: this.state.currentItem.Id,
+        Status: true
+      }
+      console.log(data)
+      axios({
+        method: 'post',
+        url: '/api/category-management',
+        headers: { 'content-type': 'application/json' },
+        data: data
+      }).then(res => {
+        console.log('ok')
+        axios({
+          method: 'GET',
+          url: '/api/category-management'
+        }).then(res => {
+          console.log(res)
+          console.log(res.data)
+          for (let index = 0; index < res.data.length; index++) {
+            const element = res.data[index]
+            if (res.data[index].SubCategories.length !== 0) {
+              for (
+                let jindex = 0;
+                jindex < res.data[index].SubCategories.length;
+                jindex++
+              ) {
+                const subelement = res.data[index].SubCategories[jindex]
+
+                this.state.Categories.push(subelement)
+              }
+            }
+            this.state.Categories.push(element)
+            this.state.parrentCategories.push(element)
+          }
+          this.setState({
+            isLoading: false
+          })
+
+          toast.success('add new category successfully')
+        })
+      })
+    }
+  }
+
   onSubmitChange = () => {
     this.setState({
       isLoading: true,
@@ -703,7 +765,7 @@ class Categories extends React.Component {
                   />
                 </Segment>
                 <Segment basic textAlign='center'>
-                  <Form onSubmit={this.handleSubmit}>
+                  <Form>
                     <Form.Input
                       fluid
                       label='Name'
@@ -711,7 +773,10 @@ class Categories extends React.Component {
                       placeholder='Name'
                       onChange={this.handleChange}
                     />
-                    <Form.Button content='Submit' />
+                    <Form.Button
+                      onClick={this.handleSubmit2}
+                      content='Submit'
+                    />
                   </Form>
                 </Segment>
               </div>

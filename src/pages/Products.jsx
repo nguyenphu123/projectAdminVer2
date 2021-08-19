@@ -1160,6 +1160,9 @@ class Products extends React.Component {
                     </Segment>
                   )}
                 </ImageUploading>
+                <Button size='big' onClick={this.handleSubmitChange} primary>
+                  Save
+                </Button>
               </Form.Group>
             </Tab.Pane>
           )

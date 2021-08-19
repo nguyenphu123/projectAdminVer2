@@ -46,7 +46,9 @@ class Customers extends React.Component {
 
       this.setState({
         isLoading: false,
-        user: res.data
+        user: res.data.filter(
+          item => item.RoleId === 'd00d3c17-6180-4a32-884c-976cd044ce7b'
+        )
       })
     })
   }

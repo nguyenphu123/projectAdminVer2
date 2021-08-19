@@ -74,7 +74,7 @@ function Dashboard () {
       key: 'OrderId'
     },
     {
-      title: 'Paid status',
+      title: 'Ship status',
       render: (text, record) => renderSwitch(record.Ship[0].ShipStatus),
       key: 'Paid status'
     }
