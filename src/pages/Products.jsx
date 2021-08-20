@@ -554,7 +554,7 @@ class Products extends React.Component {
     )
     if (check_index !== -1) {
       notification['fail']({
-        message: 'add product',
+        message: 'update product',
         description: 'duplicate name',
         duration: 10
       })
@@ -565,7 +565,7 @@ class Products extends React.Component {
         this.state.currentItem.CurrentPrice > this.state.updatePrice
       ) {
         notification['fail']({
-          message: 'add product',
+          message: 'update product',
           description: 'current price cannot be larger price',
           duration: 10
         })
@@ -1336,7 +1336,9 @@ class Products extends React.Component {
                       fluid
                       name='CategoryId'
                       label='Category'
-                      options={this.state.categories}
+                      options={this.state.categories.filter(
+                        item => item.Status === true
+                      )}
                       placeholder='Category'
                       onChange={this.handleChange}
                     />

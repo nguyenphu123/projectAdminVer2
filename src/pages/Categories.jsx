@@ -186,51 +186,58 @@ class Categories extends React.Component {
     if (check_index !== -1) {
       toast.warn('add new category failed, duplicate name')
     } else {
-      const data = {
-        Name: this.state.Name,
-        ParentId: this.state.currentItem.Id,
-        Status: true
-      }
-      console.log(data)
-      axios({
-        method: 'post',
-        url: '/api/category-management',
-        headers: { 'content-type': 'application/json' },
-        data: data
-      }).then(res => {
-        console.log('ok')
+      if (this.state.currentItem.Status) {
+        const data = {
+          Name: this.state.Name,
+          ParentId: this.state.currentItem.Id,
+          Status: true
+        }
+        console.log(data)
         axios({
-          method: 'GET',
-          url: '/api/category-management'
+          method: 'post',
+          url: '/api/category-management',
+          headers: { 'content-type': 'application/json' },
+          data: data
         }).then(res => {
-          console.log(res)
-          console.log(res.data)
-          for (let index = 0; index < res.data.length; index++) {
-            const element = res.data[index]
-            if (res.data[index].SubCategories.length !== 0) {
-              for (
-                let jindex = 0;
-                jindex < res.data[index].SubCategories.length;
-                jindex++
-              ) {
-                const subelement = res.data[index].SubCategories[jindex]
+          console.log('ok')
+          axios({
+            method: 'GET',
+            url: '/api/category-management'
+          }).then(res => {
+            console.log(res)
+            console.log(res.data)
+            for (let index = 0; index < res.data.length; index++) {
+              const element = res.data[index]
+              if (res.data[index].SubCategories.length !== 0) {
+                for (
+                  let jindex = 0;
+                  jindex < res.data[index].SubCategories.length;
+                  jindex++
+                ) {
+                  const subelement = res.data[index].SubCategories[jindex]
 
-                this.state.Categories.push(subelement)
+                  this.state.Categories.push(subelement)
+                }
               }
+              this.state.Categories.push(element)
+              this.state.parrentCategories.push(element)
             }
-            this.state.Categories.push(element)
-            this.state.parrentCategories.push(element)
-          }
-          this.setState({
-            isLoading: false
-          })
+            this.setState({
+              isLoading: false
+            })
 
-          toast.success('add new category successfully')
+            toast.success('add new category successfully')
+          })
         })
-      })
+      } else {
+        this.setState({
+          isLoading: false
+        })
+
+        toast.warn('cannnot create subcategory from category that is disabled')
+      }
     }
   }
-
   onSubmitChange = () => {
     this.setState({
       isLoading: true,
@@ -251,7 +258,7 @@ class Categories extends React.Component {
             ? this.state.currentItem.Name
             : this.state.newName,
         ParentId: this.state.currentItem.ParrentId,
-        Status: true
+        Status: this.state.currentItem.Status
       }
 
       axios({
