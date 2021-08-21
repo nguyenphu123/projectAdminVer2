@@ -19,6 +19,9 @@ import {
 import Table from 'antd/lib/table'
 import 'antd/lib/table/style/css'
 import { Input } from 'antd'
+import Moment from 'moment'
+import { DatePicker } from 'antd'
+const dateFormat = 'DD/MM/YYYY'
 
 const Search = Input.Search
 
@@ -31,36 +34,36 @@ class Orders extends React.Component {
     }
     this.reset = this.reset.bind(this)
   }
-  // onUpdate = item => {
-  //   const order = {
-  //     Id: item.Id,
-  //     UserId: item.UserId,
-  //     TotalPrice: item.TotalPrice,
-  //     AddressShipping: item.AddressShipping,
-  //     Phone: item.Phone,
-  //     Date: item.Date,
-  //     Status: true
-  //     // OrderDetails: item.Orderdetails,
-  //     // Ship: item.Ship
-  //   }
-  //   axios({
-  //     method: 'put',
-  //     url: '/api/order-management/users/orders',
-  //     data: order
-  //   }).then(res => {
-  //     console.log(res)
-  //     axios({
-  //       method: 'GET',
-  //       url: '/api/order-management/orders'
-  //     }).then(res => {
-  //       console.log(res)
-  //       console.log(res.data)
-  //       this.setState({
-  //         Orders: res.data
-  //       })
-  //     })
-  //   })
-  // }
+
+  handleDatePickerChange = (date, dateString, id) => {
+    if (dateString === '') {
+      axios({
+        method: 'GET',
+        url: '/api/order-management/orders'
+      }).then(res => {
+        console.log(res)
+        console.log(res.data)
+        this.setState({
+          Orders: res.data
+        })
+      })
+    } else {
+      axios({
+        method: 'GET',
+        url: '/api/order-management/orders'
+      }).then(res => {
+        console.log(res)
+        console.log(res.data)
+        let sorting = res.data.filter(
+          item => Moment(item.Date).format('DD/MM/YYYY') === dateString
+        )
+
+        this.setState({
+          Orders: sorting
+        })
+      })
+    }
+  }
 
   reset () {
     this.setState({
@@ -110,8 +113,25 @@ class Orders extends React.Component {
       },
       {
         title: 'Date',
-        dataIndex: 'Date',
-        key: 'Date'
+        key: 'Date',
+        defaultSortOrder: 'descend',
+        sorter: (a, b) =>
+          new Date(
+            Moment(a.Date)
+              .format('DD/MM/YYYY')
+              .split('/')
+              .reverse()
+          ) -
+          new Date(
+            Moment(b.Date)
+              .format('DD/MM/YYYY')
+              .split('/')
+              .reverse()
+          ),
+
+        render: (text, record) => (
+          <>{Moment(record.Date).format('DD/MM/YYYY')}</>
+        )
       },
       {
         title: 'Total',
@@ -185,6 +205,12 @@ class Orders extends React.Component {
                   <Button type='primary' onClick={() => this.reset()}>
                     Reset
                   </Button>
+                  <DatePicker
+                    onChange={(date, dateString) =>
+                      this.handleDatePickerChange(date, dateString, 1)
+                    }
+                    format={'DD/MM/YYYY'}
+                  />
 
                   <Table
                     dataSource={this.state.Orders}

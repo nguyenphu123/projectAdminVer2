@@ -17,6 +17,14 @@ const StatusCard = props => {
             displayType={'text'}
             thousandSeparator={true}
             prefix={''}
+            renderText={(value, props) => <div {...props}>{value} /</div>}
+          />
+          <NumberFormat
+            value={props.countTotal}
+            className='foo'
+            displayType={'text'}
+            thousandSeparator={true}
+            prefix={''}
             renderText={(value, props) => <div {...props}>{value}</div>}
           />
         </h4>
