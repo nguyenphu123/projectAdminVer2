@@ -307,15 +307,21 @@ class Products extends React.Component {
     })
   }
   onView (item) {
-    this.setState({
-      visibility: !this.state.visibility,
-      currentItem: item,
-      updateName: item.Name,
-      updateCurPrice: item.CurrentPrice,
-      updateDes: item.Description,
-      updatePrice: item.Price,
-      currentImage: item.ImageStorages
-    })
+    if (this.state.visibility === false) {
+      this.setState({
+        visibility: !this.state.visibility,
+        currentItem: item,
+        updateName: item.Name,
+        updateCurPrice: item.CurrentPrice,
+        updateDes: item.Description,
+        updatePrice: item.Price,
+        currentImage: item.ImageStorages
+      })
+    } else {
+      this.setState({
+        visibility: !this.state.visibility
+      })
+    }
   }
   onViewAddProduct () {
     this.setState({
@@ -393,37 +399,34 @@ class Products extends React.Component {
             })
           })
         } else {
+          const newElement = {
+            ProductId: this.state.currentItem.Id,
+            Quantity: this.state.newQuantity,
+            ColorId: this.state.newColorId,
+            SizeId: this.state.newSizeId
+          }
           axios({
             method: 'post',
             url: '/api/element-management',
             headers: { 'content-type': 'application/json' },
-            data: JSON.stringify({
-              ProductId: this.state.currentItem.Id,
-              Quantity: this.state.newQuantity,
-              ColorId: this.state.newColorId,
-              SizeId: this.state.newSizeId
-            })
+            data: JSON.stringify(newElement)
           }).then(res => {
             axios({
-              method: 'GET',
-              url: '/api/element-management'
+              method: 'get',
+              url:
+                '/api/product-management/productId?productId=' +
+                this.state.currentItem.Id,
+              headers: {}
             }).then(res => {
-              const check_index = res.data.findIndex(
-                item =>
-                  item.Color.Id === this.state.newColorId &&
-                  item.Size.Id === this.state.newSizeId
-              )
-              if (check_index !== -1) {
-                this.state.currentItem.Elements.push(res.data[check_index])
-                this.setState({
-                  LoadingOnElement: false
-                })
-                notification['success']({
-                  message: 'update element',
-                  description: 'update successfully.',
-                  duration: 10
-                })
-              }
+              this.setState({
+                currentItem: res.data,
+                LoadingOnElement: false
+              })
+              notification['success']({
+                message: 'update element',
+                description: 'update successfully.',
+                duration: 10
+              })
             })
           })
         }
@@ -455,14 +458,14 @@ class Products extends React.Component {
       item => item.Name === this.state.Name
     )
     if (check_index !== -1) {
-      notification['fail']({
+      notification['error']({
         message: 'add product',
         description: 'duplicate name',
         duration: 10
       })
     } else {
       if (this.state.CurrentPrice > this.state.Price) {
-        notification['fail']({
+        notification['error']({
           message: 'add product',
           description: 'current price cannot be larger price',
           duration: 10
@@ -541,134 +544,191 @@ class Products extends React.Component {
     this.setState({
       LoadingOnProduct: true
     })
-    let check_index = this.state.product.findIndex(
-      item => item.Name === this.state.updateName
-    )
-    if (check_index !== -1) {
-      notification['fail']({
+
+    if (
+      this.state.updateCurPrice > this.state.updatePrice ||
+      this.state.updateCurPrice > this.state.currentItem.Price ||
+      this.state.currentItem.CurrentPrice > this.state.updatePrice
+    ) {
+      notification['error']({
         message: 'update product',
-        description: 'duplicate name',
+        description: 'current price cannot be larger price',
         duration: 10
       })
     } else {
-      if (
-        this.state.updateCurPrice > this.state.updatePrice ||
-        this.state.updateCurPrice > this.state.currentItem.Price ||
-        this.state.currentItem.CurrentPrice > this.state.updatePrice
-      ) {
-        notification['fail']({
-          message: 'update product',
-          description: 'current price cannot be larger price',
-          duration: 10
-        })
-      } else {
-        if (this.state.updateImages.length !== 0) {
-          var Await = true
-          const imageUrls = []
-          for (let index = 0; index < this.state.updateImages.length; index++) {
-            const element = this.state.updateImages[index].data_url
+      if (this.state.updateImages.length !== 0) {
+        var Await = true
+        const imageUrls = []
+        for (let index = 0; index < this.state.updateImages.length; index++) {
+          const element = this.state.updateImages[index].data_url
 
-            const data = new FormData()
-            data.append('file', element)
-            data.append('upload_preset', 'ml_default')
-            data.append('cloud_name', 'shopproject')
-            fetch(
-              '  	https://api.cloudinary.com/v1_1/shopproject/image/upload',
-              {
-                method: 'post',
-                body: data
+          const data = new FormData()
+          data.append('file', element)
+          data.append('upload_preset', 'ml_default')
+          data.append('cloud_name', 'shopproject')
+          fetch('  	https://api.cloudinary.com/v1_1/shopproject/image/upload', {
+            method: 'post',
+            body: data
+          })
+            .then(resp => resp.json())
+            .then(response => {
+              const imageURL = {
+                ImageUrl: response.url,
+                Alt: 'image'
               }
-            )
-              .then(resp => resp.json())
-              .then(response => {
-                const imageURL = {
-                  ImageUrl: response.url,
-                  Alt: 'image'
-                }
-                imageUrls.push(imageURL)
+              imageUrls.push(imageURL)
 
-                if (index === this.state.ImageList.length) {
-                  Await = false
-                }
-              })
-              .catch(err => console.log(err))
-          }
-
-          setTimeout(() => {
-            this.onSubmitChange(this.state.currentImage.concat(imageUrls))
-          }, 10000)
-        } else {
-          this.onSubmitChange(this.state.currentImage)
+              if (index === this.state.ImageList.length) {
+                Await = false
+              }
+            })
+            .catch(err => console.log(err))
         }
+
+        setTimeout(() => {
+          this.onSubmitChange([...this.state.currentImage, ...imageUrls])
+        }, 10000)
+      } else {
+        console.log(this.state.currentImage)
+        this.onSubmitChange(this.state.currentImage)
       }
     }
   }
   onSubmitChange = imageUrls => {
-    const data = {
-      Id: this.state.currentItem.Id,
-      ModifiedProduct: {
-        Name:
-          this.state.updateName === ''
-            ? this.state.currentItem.Name
-            : this.state.updateName,
-        Price:
-          this.state.updatePrice === 0
-            ? parseFloat(this.state.currentItem.Price)
-            : parseFloat(this.state.updatePrice),
-        CurrentPrice:
-          this.state.updateCurPrice === 0
-            ? parseFloat(this.state.currentItem.CurrentPrice)
-            : parseFloat(this.state.updateCurPrice),
-        Code: this.state.currentItem.Code,
-        CategoryId: this.state.currentItem.CategoryId,
-        Description:
-          this.state.Description === ''
-            ? this.state.currentItem.Description
-            : this.state.updateDes,
-        ImageStorages: imageUrls,
-        Tags: this.state.currentItem.Tags,
+    console.log(imageUrls)
+    if (imageUrls !== this.state.currentItem.ImageStorages) {
+      const data = {
+        Id: this.state.currentItem.Id,
+        ModifiedProduct: {
+          Name:
+            this.state.updateName === ''
+              ? this.state.currentItem.Name
+              : this.state.updateName,
+          Price:
+            this.state.updatePrice === 0
+              ? parseFloat(this.state.currentItem.Price)
+              : parseFloat(this.state.updatePrice),
+          CurrentPrice:
+            this.state.updateCurPrice === 0
+              ? parseFloat(this.state.currentItem.CurrentPrice)
+              : parseFloat(this.state.updateCurPrice),
+          Code: this.state.currentItem.Code,
+          CategoryId: this.state.currentItem.CategoryId,
+          Description:
+            this.state.Description === ''
+              ? this.state.currentItem.Description
+              : this.state.updateDes,
+          ImageStorages: imageUrls,
+          Tags: this.state.currentItem.Tags,
 
-        Status: true,
-        DateTime: new Date()
-          .toISOString()
-          .slice(0, 19)
-          .replace('T', ' '),
-        Star:
-          this.state.currentItem.Star === 'NaN'
-            ? 0
-            : this.state.currentItem.Star
+          Status: true,
+          DateTime: new Date()
+            .toISOString()
+            .slice(0, 19)
+            .replace('T', ' '),
+          Star:
+            this.state.currentItem.Star === 'NaN'
+              ? 0
+              : this.state.currentItem.Star
+        }
       }
-    }
-    axios({
-      method: 'put',
-      url: '/api/product-management',
-      headers: { 'content-type': 'application/json' },
-      data: JSON.stringify(data)
-    }).then(res => {
-      console.log(res)
       axios({
-        method: 'GET',
-        url: '/api/product-management?sort=up&pageIndex=1&pageSize=1000'
+        method: 'put',
+        url: '/api/product-management',
+        headers: { 'content-type': 'application/json' },
+        data: JSON.stringify(data)
       }).then(res => {
         console.log(res)
-        console.log(res.data)
-        this.setState({
-          Name: '',
-          Price: '',
-          CurrentPrice: '',
-          Description: '',
-          updateImages: [],
+        axios({
+          method: 'GET',
+          url: '/api/product-management?sort=up&pageIndex=1&pageSize=1000'
+        }).then(res => {
+          console.log(res)
+          console.log(res.data)
+          this.setState({
+            Name: '',
+            Price: '',
+            CurrentPrice: '',
+            Description: '',
+            updateImages: [],
 
-          LoadingOnProduct: false,
-          product: res.data
-        })
-        notification['success']({
-          message: 'update product',
-          description: 'update successfully.',
-          duration: 10
+            LoadingOnProduct: false,
+            product: res.data
+          })
+          notification['success']({
+            message: 'update product',
+            description: 'update successfully.',
+            duration: 10
+          })
         })
       })
-    })
+    } else {
+      const data = {
+        Id: this.state.currentItem.Id,
+        ModifiedProduct: {
+          Name:
+            this.state.updateName === ''
+              ? this.state.currentItem.Name
+              : this.state.updateName,
+          Price:
+            this.state.updatePrice === 0
+              ? parseFloat(this.state.currentItem.Price)
+              : parseFloat(this.state.updatePrice),
+          CurrentPrice:
+            this.state.updateCurPrice === 0
+              ? parseFloat(this.state.currentItem.CurrentPrice)
+              : parseFloat(this.state.updateCurPrice),
+          Code: this.state.currentItem.Code,
+          CategoryId: this.state.currentItem.CategoryId,
+          Description:
+            this.state.Description === ''
+              ? this.state.currentItem.Description
+              : this.state.updateDes,
+          ImageStorages: [],
+          Tags: this.state.currentItem.Tags,
+
+          Status: true,
+          DateTime: new Date()
+            .toISOString()
+            .slice(0, 19)
+            .replace('T', ' '),
+          Star:
+            this.state.currentItem.Star === 'NaN'
+              ? 0
+              : this.state.currentItem.Star
+        }
+      }
+      axios({
+        method: 'put',
+        url: '/api/product-management',
+        headers: { 'content-type': 'application/json' },
+        data: JSON.stringify(data)
+      }).then(res => {
+        console.log(res)
+        axios({
+          method: 'GET',
+          url: '/api/product-management?sort=up&pageIndex=1&pageSize=1000'
+        }).then(res => {
+          console.log(res)
+          console.log(res.data)
+          this.setState({
+            Name: '',
+            Price: '',
+            CurrentPrice: '',
+            Description: '',
+            updateImages: [],
+
+            LoadingOnProduct: false,
+            product: res.data
+          })
+          notification['success']({
+            message: 'update product',
+            description: 'update successfully.',
+            duration: 10
+          })
+        })
+      })
+    }
   }
   onSubmitDisabled = product => {
     this.setState({
@@ -688,7 +748,7 @@ class Products extends React.Component {
         CategoryId: product.CategoryId,
         Description: product.Description,
 
-        ImageStorages: product.ImageStorages,
+        ImageStorages: [],
         Tags: product.Tags,
 
         Status: false,
@@ -742,7 +802,7 @@ class Products extends React.Component {
         CategoryId: product.CategoryId,
         Description: product.Description,
 
-        ImageStorages: product.ImageStorages,
+        ImageStorages: [],
         Tags: product.Tags,
 
         Status: true,
@@ -792,7 +852,7 @@ class Products extends React.Component {
 
   render () {
     const { value } = this.state
-    const maxNumber = 100
+    const maxNumber = 5
     const tableColumns = [
       {
         title: 'Id',
@@ -1047,7 +1107,7 @@ class Products extends React.Component {
           menuItem: { key: 'images', icon: 'image', content: 'Image' },
           render: () => (
             <Tab.Pane attached={false}>
-              {this.state.currentImage.map(({ ImageUrl }) => (
+              {/* {this.state.currentImage.map(({ ImageUrl }) => (
                 <Space size={7}>
                   <Image
                     width={100}
@@ -1072,76 +1132,75 @@ class Products extends React.Component {
                     Remove
                   </Button>
                 </Space>
-              ))}
-              <Form.Group inline>
-                <ImageUploading
-                  multiple
-                  value={this.state.updateImages}
-                  onChange={(imageList, addUpdateIndex) => {
-                    // data for submit
-                    console.log(imageList, addUpdateIndex)
-                    this.setState({
-                      updateImages: imageList
-                    })
-                  }}
-                  maxNumber={this.maxNumber}
-                  dataURLKey='data_url'
-                >
-                  {({
-                    imageList,
-                    onImageUpload,
-                    onImageRemoveAll,
-                    onImageUpdate,
-                    onImageRemove,
-                    isDragging,
-                    dragProps
-                  }) => (
-                    <Segment placeholder>
-                      <Header icon>
-                        <div className='upload__image-wrapper'>
-                          {imageList.map((image, index) => (
-                            <div key={index} className='image-item'>
-                              <img
-                                style={{ width: '100px', height: '100px' }}
-                                src={image.data_url}
-                                alt=''
-                              />
-                              <div className='image-item__btn-wrapper'>
-                                <Button
-                                  inverted
-                                  color='blue'
-                                  style={{ marginTop: '10px' }}
-                                  onClick={() => onImageUpdate(index)}
-                                >
-                                  Update
-                                </Button>
-                                <Button
-                                  inverted
-                                  color='blue'
-                                  style={{ marginTop: '10px' }}
-                                  onClick={() => onImageRemove(index)}
-                                >
-                                  Remove
-                                </Button>
-                              </div>
+              ))} */}
+
+              <ImageUploading
+                multiple
+                value={this.state.updateImages}
+                onChange={(imageList, addUpdateIndex) => {
+                  // data for submit
+                  console.log(imageList, addUpdateIndex)
+                  this.setState({
+                    updateImages: imageList
+                  })
+                }}
+                maxNumber={this.maxNumber}
+                dataURLKey='data_url'
+              >
+                {({
+                  imageList,
+                  onImageUpload,
+                  onImageRemoveAll,
+                  onImageUpdate,
+                  onImageRemove,
+                  isDragging,
+                  dragProps
+                }) => (
+                  <Segment placeholder>
+                    <Header icon>
+                      <div className='upload__image-wrapper'>
+                        {imageList.map((image, index) => (
+                          <div key={index} className='image-item'>
+                            <img
+                              style={{ width: '100px', height: '100px' }}
+                              src={image.data_url}
+                              alt=''
+                            />
+                            <div className='image-item__btn-wrapper'>
+                              <Button
+                                inverted
+                                color='blue'
+                                style={{ marginTop: '10px' }}
+                                onClick={() => onImageUpdate(index)}
+                              >
+                                Update
+                              </Button>
+                              <Button
+                                inverted
+                                color='blue'
+                                style={{ marginTop: '10px' }}
+                                onClick={() => onImageRemove(index)}
+                              >
+                                Remove
+                              </Button>
                             </div>
-                          ))}
-                        </div>
-                      </Header>
-                      <Button
-                        fluid
-                        icon='upload'
-                        style={isDragging ? { color: 'red' } : null}
-                        onClick={onImageUpload}
-                        {...dragProps}
-                      ></Button>
-                    </Segment>
-                  )}
-                </ImageUploading>
-                <Button size='big' onClick={this.handleSubmitChange} primary>
-                  Save
-                </Button>
-              </Form.Group>
+                          </div>
+                        ))}
+                      </div>
+                    </Header>
+                    <Button
+                      fluid
+                      icon='upload'
+                      style={isDragging ? { color: 'red' } : null}
+                      onClick={onImageUpload}
+                      {...dragProps}
+                    ></Button>
+                  </Segment>
+                )}
+              </ImageUploading>
+              <Button size='big' onClick={this.handleSubmitChange} primary>
+                Save
+              </Button>
             </Tab.Pane>
           )
         },
@@ -1192,7 +1251,7 @@ class Products extends React.Component {
           )
         }
       ]
-      console.log(this.state.currentItem.Elements)
+      console.log(this.state.currentItem)
       return (
         <div>
           <h2 className='page-header'>products</h2>

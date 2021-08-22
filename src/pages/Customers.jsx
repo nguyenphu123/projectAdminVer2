@@ -70,20 +70,17 @@ class Customers extends React.Component {
       Address: UserInformation.Address,
       Gender: UserInformation.Gender,
       Point: 0,
-      Email: UserInformation.Email,
-      Rank: UserInformation.Rank,
-      Role: UserInformation.Role,
-      Orders: UserInformation.Orders
+      Email: UserInformation.Email
     }
-
+    console.log(authData)
     axios({
       method: 'put',
       url: '/api/user-management/users',
-      headers: {},
+      headers: { 'content-type': 'application/json' },
       data: authData
     })
       .then(res => {
-        toast.success('Change status successful')
+        toast.success('Disable successful')
       })
       .catch(function (error) {
         console.log('Show error notification!')
@@ -143,11 +140,14 @@ class Customers extends React.Component {
       {
         title: 'Disable',
         key: 'action',
-        render: (text, record) => (
-          <Button type='primary' onClick={() => this.onSubmitDisable(record)}>
-            Disable
-          </Button>
-        )
+        render: (text, record) =>
+          record.Point === 0 ? (
+            <></>
+          ) : (
+            <Button type='primary' onClick={() => this.onSubmitDisable(record)}>
+              Disable
+            </Button>
+          )
       }
     ]
 
@@ -284,7 +284,7 @@ class Customers extends React.Component {
               </div>
             </div>
           </div>
-          ;<ToastContainer autoClose={5000} />
+          <ToastContainer autoClose={5000} />
         </div>
       )
     }
