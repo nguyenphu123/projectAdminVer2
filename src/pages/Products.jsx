@@ -97,13 +97,10 @@ class Products extends React.Component {
       method: 'GET',
       url: '/api/product-management?sort=up&pageIndex=1&pageSize=1000'
     }).then(res => {
-      console.log(res)
-      console.log(res.data)
       axios({
         method: 'GET',
         url: '/api/category-management'
       }).then(res => {
-        console.log(res)
         console.log(res.data)
         for (let index = 0; index < res.data.length; index++) {
           const element = {
@@ -122,29 +119,31 @@ class Products extends React.Component {
                 text: res.data[index].SubCategories[jindex].Name,
                 value: res.data[index].SubCategories[jindex].Id
               }
+              console.log(res.data[index].SubCategories[jindex].Status)
 
-              this.state.categories.push(element)
-              this.state.categoryList.push(res.data[index])
+              if (res.data[index].SubCategories[jindex].Status === true) {
+                this.state.categories.push(element)
+                this.state.categoryList.push(res.data[index])
+              } else {
+              }
 
               //   this.setState({
               //     categories: this.state.categories.push(element)
               //   })
             }
           }
-          this.state.categories.push(element)
-          this.state.categoryList.push(res.data[index])
-
-          //   this.setState({
-          //     categories: this.state.categories.push(element)
-          //   })
+          console.log(res.data[index].Status)
+          if (res.data[index].Status === true) {
+            this.state.categories.push(element)
+            this.state.categoryList.push(res.data[index])
+          } else {
+          }
         }
       })
       axios({
         method: 'GET',
         url: '/api/tag-management'
       }).then(res => {
-        console.log(res)
-        console.log(res.data)
         for (let index = 0; index < res.data.length; index++) {
           const element = {
             key: res.data[index].Id,
@@ -162,8 +161,6 @@ class Products extends React.Component {
         method: 'GET',
         url: '/api/color-management'
       }).then(res => {
-        console.log(res)
-        console.log(res.data)
         for (let index = 0; index < res.data.length; index++) {
           const element = {
             key: res.data[index].Id,
@@ -181,8 +178,6 @@ class Products extends React.Component {
         method: 'GET',
         url: '/api/size-management'
       }).then(res => {
-        console.log(res)
-        console.log(res.data)
         for (let index = 0; index < res.data.length; index++) {
           const element = {
             key: res.data[index].Id,
@@ -196,7 +191,8 @@ class Products extends React.Component {
           //   })
         }
       })
-
+      let result = this.state.categories.filter(item => item.Status === true)
+      console.log(result)
       this.setState({
         isLoading: false,
         product: res.data
@@ -208,8 +204,6 @@ class Products extends React.Component {
       method: 'GET',
       url: '/api/product-management?sort=up&pageIndex=1&pageSize=1000'
     }).then(res => {
-      console.log(res)
-      console.log(res.data)
       axios({
         method: 'GET',
         url: '/api/category-management'
@@ -233,29 +227,31 @@ class Products extends React.Component {
                 text: res.data[index].SubCategories[jindex].Name,
                 value: res.data[index].SubCategories[jindex].Id
               }
+              console.log(res.data[index].SubCategories[jindex].Status)
 
-              this.state.categories.push(element)
-              this.state.categoryList.push(res.data[index])
+              if (res.data[index].SubCategories[jindex].Status === true) {
+                this.state.categories.push(element)
+                this.state.categoryList.push(res.data[index])
+              } else {
+              }
 
               //   this.setState({
               //     categories: this.state.categories.push(element)
               //   })
             }
           }
-          this.state.categories.push(element)
-          this.state.categoryList.push(res.data[index])
-
-          //   this.setState({
-          //     categories: this.state.categories.push(element)
-          //   })
+          console.log(res.data[index].Status)
+          if (res.data[index].Status === true) {
+            this.state.categories.push(element)
+            this.state.categoryList.push(res.data[index])
+          } else {
+          }
         }
       })
       axios({
         method: 'GET',
         url: '/api/tag-management'
       }).then(res => {
-        console.log(res)
-        console.log(res.data)
         for (let index = 0; index < res.data.length; index++) {
           const element = {
             key: res.data[index].Id,
@@ -273,8 +269,6 @@ class Products extends React.Component {
         method: 'GET',
         url: '/api/color-management'
       }).then(res => {
-        console.log(res)
-        console.log(res.data)
         for (let index = 0; index < res.data.length; index++) {
           const element = {
             key: res.data[index].Id,
@@ -292,8 +286,6 @@ class Products extends React.Component {
         method: 'GET',
         url: '/api/size-management'
       }).then(res => {
-        console.log(res)
-        console.log(res.data)
         for (let index = 0; index < res.data.length; index++) {
           const element = {
             key: res.data[index].Id,
@@ -736,70 +728,56 @@ class Products extends React.Component {
     this.setState({
       LoadingOnProduct: true
     })
-    let check_index = this.state.categoryList.findIndex(
-      item => item.Id === product.CategoryId
-    )
-    if (check_index !== -1) {
-      if (this.state.categoryList[check_index].Status) {
-        const data = {
-          Id: product.Id,
-          ModifiedProduct: {
-            Name: product.Name,
 
-            Price: parseFloat(product.Price),
+    const data = {
+      Id: product.Id,
+      ModifiedProduct: {
+        Name: product.Name,
 
-            CurrentPrice: parseFloat(product.CurrentPrice),
+        Price: parseFloat(product.Price),
 
-            Code: product.Code,
-            CategoryId: product.CategoryId,
-            Description: product.Description,
+        CurrentPrice: parseFloat(product.CurrentPrice),
 
-            ImageStorages: product.ImageStorages,
-            Tags: product.Tags,
+        Code: product.Code,
+        CategoryId: product.CategoryId,
+        Description: product.Description,
 
-            Status: true,
-            DateTime: new Date()
-              .toISOString()
-              .slice(0, 19)
-              .replace('T', ' '),
-            Star: product.Star === 'NaN' ? 0 : product.Star
-          }
-        }
-        axios({
-          method: 'put',
-          url: '/api/product-management',
-          headers: { 'content-type': 'application/json' },
-          data: JSON.stringify(data)
-        }).then(res => {
-          console.log(res)
-          axios({
-            method: 'GET',
-            url: '/api/product-management?sort=up&pageIndex=1&pageSize=1000'
-          }).then(res => {
-            console.log(res)
-            console.log(res.data)
-            this.setState({
-              LoadingOnProduct: false,
-              product: res.data
-            })
-            notification['success']({
-              message: 'update product',
-              description: 'update successfully.',
-              duration: 10
-            })
-          })
-        })
-      } else {
-        this.setState({
-          LoadingOnProduct: false
-        })
-        notification['fail']({
-          message: 'update product',
-          description: 'update fail category is inactive.',
-          duration: 10
-        })
+        ImageStorages: product.ImageStorages,
+        Tags: product.Tags,
+
+        Status: true,
+        DateTime: new Date()
+          .toISOString()
+          .slice(0, 19)
+          .replace('T', ' '),
+        Star: product.Star === 'NaN' ? 0 : product.Star
       }
     }
+    console.log(data)
+    axios({
+      method: 'put',
+      url: '/api/product-management',
+      headers: { 'content-type': 'application/json' },
+      data: JSON.stringify(data)
+    }).then(res => {
+      console.log(res)
+      axios({
+        method: 'GET',
+        url: '/api/product-management?sort=up&pageIndex=1&pageSize=1000'
+      }).then(res => {
+        console.log(res)
+        console.log(res.data)
+        this.setState({
+          LoadingOnProduct: false,
+          product: res.data
+        })
+        notification['success']({
+          message: 'update product',
+          description: 'update successfully.',
+          duration: 10
+        })
+      })
+    })
   }
   handleSearch = searchText => {
     const filteredEvents = this.state.product.filter(({ Name }) => {
@@ -901,7 +879,7 @@ class Products extends React.Component {
                   type='primary'
                   onClick={() => this.onSubmitDisabled(record)}
                 >
-                  remove
+                  Disable
                 </Button>
               </>
             ) : (
@@ -1336,9 +1314,7 @@ class Products extends React.Component {
                       fluid
                       name='CategoryId'
                       label='Category'
-                      options={this.state.categories.filter(
-                        item => item.Status === true
-                      )}
+                      options={this.state.categories}
                       placeholder='Category'
                       onChange={this.handleChange}
                     />
@@ -1465,6 +1441,7 @@ class Products extends React.Component {
                   </ImageUploading>
                   <Button onClick={this.handleSubmit} content='Save' />
                 </Form>
+                <ToastContainer autoClose={5000} />
               </Segment>
             </div>
             <div>

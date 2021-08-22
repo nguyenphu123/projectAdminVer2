@@ -103,6 +103,36 @@ class Orders extends React.Component {
       Orders: filteredEvents
     })
   }
+  onUpdate = record => {
+    let ship = record
+    if (record.Status === 'Failed') {
+      ship.Status = 'Completed'
+    } else {
+      ship.Status = 'Failed'
+    }
+
+    axios({
+      method: 'PUT',
+      url: '/api/order-management/users/orders',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json'
+      },
+      data: JSON.stringify(ship)
+    }).then(res => {
+      console.log(res)
+      axios({
+        method: 'GET',
+        url: '/api/order-management/orders'
+      }).then(res => {
+        console.log(res)
+        console.log(res.data)
+        this.setState({
+          Orders: res.data
+        })
+      })
+    })
+  }
 
   render () {
     const tableColumns = [
@@ -163,7 +193,7 @@ class Orders extends React.Component {
       {
         title: 'Paid status',
         render: (text, record) =>
-          record.Status ? (
+          record.Status !== 'Failed' ? (
             <Header as='h4' color='green'>
               Paid
             </Header>
@@ -174,17 +204,17 @@ class Orders extends React.Component {
           ),
 
         key: 'Paid status'
-      }
+      },
 
-      // {
-      //   title: 'Action',
-      //   key: 'action',
-      //   render: (text, record) => (
-      //     <Button type='primary' onClick={() => this.onUpdate(record)}>
-      //       Update
-      //     </Button>
-      //   )
-      // }
+      {
+        title: 'Action',
+        key: 'action',
+        render: (text, record) => (
+          <Button type='primary' onClick={() => this.onUpdate(record)}>
+            Update
+          </Button>
+        )
+      }
     ]
 
     if (this.state.Orders === undefined || this.state.Orders === []) {

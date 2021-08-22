@@ -53,5 +53,5 @@
       "last 1 safari version"
     ]
   },
-  "proxy": "https://localhost:44358"
+  "proxy": "https://ec2-122-248-224-173.ap-southeast-1.compute.amazonaws.com:443"
 }

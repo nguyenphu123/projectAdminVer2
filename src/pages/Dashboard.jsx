@@ -91,6 +91,34 @@ function Dashboard () {
       })
     }
   }
+  const onUpdate = (Id, ShipId) => {
+    const ship = {
+      Id: ShipId,
+      OrderId: Id,
+      CompanyName: 'FPT',
+      ShipStatus: 'Completed'
+    }
+    axios({
+      method: 'PUT',
+      url: '/api/ship-management',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json'
+      },
+      data: JSON.stringify(ship)
+    }).then(res => {
+      console.log(res)
+      axios({
+        method: 'GET',
+        url: '/api/order-management/orders'
+      }).then(res => {
+        console.log(res)
+        console.log(res.data)
+
+        setOrders(res.data)
+      })
+    })
+  }
 
   const tableColumns = [
     {
@@ -127,6 +155,18 @@ function Dashboard () {
       title: 'Ship status',
       render: (text, record) => renderSwitch(record.Ship[0].ShipStatus),
       key: 'Paid status'
+    },
+    {
+      title: ' Update',
+      key: 'action',
+      render: (text, record) => (
+        <Button
+          type='primary'
+          onClick={() => onUpdate(record.Id, record.Ship[0].Id)}
+        >
+          Update
+        </Button>
+      )
     }
   ]
   const renderSwitch = param => {

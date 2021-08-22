@@ -19,6 +19,9 @@ import {
 import { RMIUploader } from 'react-multiple-image-uploader'
 import { ToastContainer, toast } from 'react-toastify'
 import Table from 'antd/lib/table'
+import { Input } from 'antd'
+
+const Search = Input.Search
 
 class Categories extends React.Component {
   constructor () {
@@ -674,6 +677,16 @@ class Categories extends React.Component {
   }
   // toggle = () =>
   //   this.setState(prevState => ({ acceptActionProduct: !prevState.checked }))
+  handleSearch = searchText => {
+    const filteredEvents = this.state.Categories.filter(({ Name }) => {
+      Name = Name.toLowerCase()
+      return Name.includes(searchText.toLowerCase())
+    })
+
+    this.setState({
+      Categories: filteredEvents
+    })
+  }
 
   render () {
     const tableColumns = [
@@ -856,6 +869,12 @@ class Categories extends React.Component {
             <div className='col-12'>
               <div className='card'>
                 <div className='card__body'>
+                  <Search
+                    placeholder='Enter Title'
+                    onSearch={this.handleSearch}
+                    style={{ width: 200 }}
+                  />
+
                   <Button type='primary' onClick={() => this.reset()}>
                     Reset
                   </Button>
